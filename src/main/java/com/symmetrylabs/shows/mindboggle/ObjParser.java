@@ -92,7 +92,7 @@ public class ObjParser {
                 if (parts[1].startsWith("Fixture")) {
                     int output = 0;
                     String[] nameParts = parts[1].split("_");
-                    if (nameParts.length > 1 && nameParts[1].matches("^Output.\\d+$")) {
+                    if (nameParts.length > 1 && nameParts[1].matches("^Output\\.\\d+$")) {
                         output = Integer.parseInt(nameParts[1].split("\\.")[1], 10);
                     }
 
