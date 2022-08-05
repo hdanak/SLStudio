@@ -81,7 +81,7 @@ public class MindBoggleShow implements Show, HasWorkspace {
             for (int i = 0; i < PIXLITE_OUTPUT_COUNT; ++i) {
                 if (pointsPerOutput.containsKey(baseOutput + i)) {
                     List<LXPoint> points = pointsPerOutput.get(baseOutput + i);
-                    pixlite.addPixliteOutput(new PointsGrouping(i+"").addPoints(points));
+                    pixlite.addPixliteOutput(new PointsGrouping(i+1+"").addPoints(points));
                 }
             }
 
