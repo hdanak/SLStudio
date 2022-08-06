@@ -25,7 +25,7 @@ import heronarts.lx.parameter.LXParameter;
 
 import com.symmetrylabs.slstudio.SLStudioLX;
 import com.symmetrylabs.slstudio.render.Renderer;
-import com.symmetrylabs.slstudio.render.InterpolatingRenderer;
+import com.symmetrylabs.slstudio.render.TripleBufferedRenderer;
 import com.symmetrylabs.slstudio.render.Renderable;
 import com.symmetrylabs.util.CaptionSource;
 import com.symmetrylabs.util.Marker;
@@ -80,7 +80,7 @@ public abstract class SLPattern<M extends SLModel> extends LXPattern implements 
     protected void createParameters() { }
 
     protected Renderer createRenderer(LXModel model, int[] colors, Renderable renderable) {
-        return new InterpolatingRenderer(model, colors, renderable);
+        return new TripleBufferedRenderer(model, colors, renderable);
         //return new SequentialRenderer(model, colors, renderable);
     }
 
@@ -102,13 +102,6 @@ public abstract class SLPattern<M extends SLModel> extends LXPattern implements 
         if (lx instanceof SLStudioLX) {
             ((SLStudioLX) lx).ui.addMarkerSource(this);
             ((SLStudioLX) lx).ui.addCaptionSource(this);
-        }
-
-        synchronized (this) {
-            if (!isManaged && renderer != null) {
-                renderer = createRenderer(model, colors, this);
-                renderer.start();
-            }
         }
     }
 
@@ -158,6 +151,13 @@ public abstract class SLPattern<M extends SLModel> extends LXPattern implements 
 
     @Override
     protected void run(double deltaMs) {
+        synchronized (this) {
+            if (!isManaged && this.renderer == null && colors != null) {
+                this.renderer = createRenderer(model, colors, this);
+                this.renderer.start();
+            }
+        }
+
         Renderer renderer = this.renderer;
 
         if (renderer != null) {
