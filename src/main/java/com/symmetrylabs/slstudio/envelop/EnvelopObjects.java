@@ -14,6 +14,8 @@ import heronarts.lx.color.LXColor;
 import static com.symmetrylabs.util.DistanceConstants.FEET;
 import static com.symmetrylabs.util.MathUtils.dist;
 
+
+// based on: https://github.com/EnvelopSound/EnvelopLX/blob/bddd1825093b2031c756da81e6bb94d93d726ad3/EnvelopLX/Patterns.pde#L642
 public class EnvelopObjects extends LXPattern {
 
     public final CompoundParameter size = new CompoundParameter("Base", 4*FEET, 0, 24*FEET);

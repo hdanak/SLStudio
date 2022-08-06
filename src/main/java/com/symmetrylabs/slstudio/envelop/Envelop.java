@@ -17,6 +17,7 @@ import heronarts.lx.osc.OscMessage;
 
 import static com.symmetrylabs.util.MathUtils.constrain;
 
+// based on: https://github.com/EnvelopSound/EnvelopLX/blob/bddd1825093b2031c756da81e6bb94d93d726ad3/EnvelopLX/Patterns.pde#L642
 public class Envelop extends LXRunnableComponent {
 
     public final Source source = new Source();

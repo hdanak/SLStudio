@@ -7,6 +7,7 @@ import heronarts.lx.osc.OscMessage;
 import static com.symmetrylabs.util.MathConstants.HALF_PI;
 import static com.symmetrylabs.util.MathConstants.PI;
 
+// based on: https://github.com/EnvelopSound/EnvelopLX/blob/7a0f9bcd1e1fff8ef91906fde0822a19432025a2/EnvelopLX/OSC.pde#L4-L53
 public class EnvelopOscListener implements LXOscListener {
     private Envelop envelop;
     private LX lx;
