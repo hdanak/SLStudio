@@ -57,8 +57,6 @@ public class ImageProject extends SLPattern<SLModel> {
                     file.setValue(rel.toString());
                     loadFile();
                 });
-        } else if (modelImageProjector != null) {
-            modelImageProjector.clearCache();
         }
     }
 

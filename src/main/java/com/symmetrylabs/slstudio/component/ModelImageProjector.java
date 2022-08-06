@@ -11,6 +11,7 @@ import heronarts.lx.LX;
 import heronarts.lx.LXPattern;
 import heronarts.lx.LXComponent;
 import heronarts.lx.model.LXModel;
+import heronarts.lx.parameter.LXParameter;
 import heronarts.lx.parameter.BooleanParameter;
 import heronarts.lx.parameter.CompoundParameter;
 import heronarts.lx.parameter.EnumParameter;
@@ -79,6 +80,11 @@ public class ModelImageProjector extends LXComponent {
 
     public void clearCache() {
         cacheValid = false;
+    }
+
+    @Override
+    public void onParameterChanged(LXParameter p) {
+        clearCache();
     }
 
     private void project(Iterable<LXVector> vecs) {
