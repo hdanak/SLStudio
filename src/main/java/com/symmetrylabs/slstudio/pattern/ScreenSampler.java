@@ -10,7 +10,7 @@ import java.awt.image.BufferedImage;
 
 import heronarts.lx.LX;
 import heronarts.lx.LXPattern;
-import heronarts.lx.PolyBuffer;
+import heronarts.lx.model.LXModel;
 import heronarts.lx.parameter.DiscreteParameter;
 import heronarts.lx.parameter.LXParameter;
 import heronarts.lx.transform.LXVector;
@@ -18,6 +18,9 @@ import heronarts.lx.transform.LXVector;
 import com.symmetrylabs.slstudio.model.SLModel;
 import com.symmetrylabs.slstudio.pattern.base.SLPattern;
 import com.symmetrylabs.slstudio.component.ModelImageProjector;
+import com.symmetrylabs.slstudio.render.Renderer;
+import com.symmetrylabs.slstudio.render.InterpolatingRenderer;
+import com.symmetrylabs.slstudio.render.Renderable;
 
 import static com.symmetrylabs.util.MathUtils.*;
 
@@ -118,5 +121,9 @@ public class ScreenSampler extends SLPattern<SLModel> {
         }
 
         modelImageProjector.projectImageToPoints(image, vecs, colors);
+    }
+
+    protected Renderer createRenderer(LXModel model, int[] colors, Renderable renderable) {
+        return new InterpolatingRenderer(model, colors, renderable);
     }
 }
