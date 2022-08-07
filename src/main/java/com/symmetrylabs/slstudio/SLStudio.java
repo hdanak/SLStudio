@@ -61,7 +61,6 @@ public class SLStudio extends PApplet implements ApplicationState.Provider {
     public APC40Listener apc40Listener;
     public PerformanceManager performanceManager;
     public CueManager cueManager;
-    private BlobTracker blobTracker;
     public Anemometer anemometer;
 
     public final BooleanParameter mappingModeEnabled = new BooleanParameter("Mappings");
@@ -172,8 +171,6 @@ public class SLStudio extends PApplet implements ApplicationState.Provider {
 
                 // SLStudio.this.performanceManager = new PerformanceManager(lx);
                 // lx.engine.registerComponent("performanceManager", performanceManager);
-
-                blobTracker = BlobTracker.getInstance(lx);
 
                 ui.theme.setPrimaryColor(0xff008ba0);
                 ui.theme.setSecondaryColor(0xff00a08b);

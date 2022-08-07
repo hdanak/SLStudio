@@ -30,10 +30,14 @@ public class BlobTracker extends LXModulatorComponent implements LXOscListener, 
 
     private static Map<LX, WeakReference<BlobTracker>> instanceByLX = new WeakHashMap<>();
 
+    // there can only be one BlobTracker listening on OSC port, may return null
     public static synchronized BlobTracker getInstance(LX lx) {
         WeakReference<BlobTracker> weakRef = instanceByLX.get(lx);
         BlobTracker ref = weakRef == null ? null : weakRef.get();
         if (ref == null) {
+            if (!instanceByLX.isEmpty())
+                return null;
+
             instanceByLX.put(lx, new WeakReference<>(ref = new BlobTracker(lx)));
         }
         return ref;
