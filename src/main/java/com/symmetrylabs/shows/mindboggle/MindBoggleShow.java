@@ -21,6 +21,7 @@ import com.symmetrylabs.slstudio.workspaces.Workspace;
 
 public class MindBoggleShow implements Show, HasWorkspace {
     public static final String SHOW_NAME = "mindboggle";
+    public static final String LOG_TAG = "[MindBoggleShow] ";
 
     private static final String OBJ_FILENAME = "model.obj";
 
@@ -49,6 +50,7 @@ public class MindBoggleShow implements Show, HasWorkspace {
                 outputPoints = pointsPerOutput.get(f.output);
             }
 
+            System.out.println(LOG_TAG + "Adding points for fixture " + f.num + " with output " + f.output);
             for (LXVector v : f.verts) {
                 LXPoint p = new LXPoint(v.x, v.y, v.z);
 
