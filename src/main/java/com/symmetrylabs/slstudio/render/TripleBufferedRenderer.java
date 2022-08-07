@@ -116,22 +116,17 @@ public class TripleBufferedRenderer extends Renderer {
                 double deltaMs = (timeNanos - lastTimeNanos) / 1_000_000d;
 
                 RenderFrame active = tripleBuffer.getWriteBuffer();
-
                 active.renderStartNanos = timeNanos;
 
                 Arrays.fill(active.buffer, 0);
                 renderable.render(deltaMs, vectors, active.buffer);
 
                 long renderEndNanos = System.nanoTime();
-                active.renderEndNanos = renderEndNanos;
-
                 long elapsedNanos = renderEndNanos - lastTimeNanos;
+                active.renderEndNanos = renderEndNanos;
                 lastTimeNanos = timeNanos;
 
                 tripleBuffer.flipWriteBuffer();
-                //System.out.println("FLIP WRITER");
-
-                //System.out.println("Rendering: " + active);
 
                 sleepNanosFromElapsed(elapsedNanos);
             }
