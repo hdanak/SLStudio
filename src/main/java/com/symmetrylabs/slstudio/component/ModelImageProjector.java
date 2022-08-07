@@ -5,15 +5,21 @@ package com.symmetrylabs.slstudio.component;
  */
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.StreamSupport;
 import java.awt.image.BufferedImage;
 
 import heronarts.lx.LX;
 import heronarts.lx.LXPattern;
 import heronarts.lx.LXComponent;
 import heronarts.lx.model.LXModel;
+import heronarts.lx.color.LXColor;
 import heronarts.lx.parameter.LXParameter;
+import heronarts.lx.parameter.LXListenableParameter;
 import heronarts.lx.parameter.BooleanParameter;
-import heronarts.lx.parameter.CompoundParameter;
+import heronarts.lx.parameter.BoundedParameter;
+import heronarts.lx.parameter.DiscreteParameter;
 import heronarts.lx.parameter.EnumParameter;
 import heronarts.lx.transform.LXMatrix;
 import heronarts.lx.transform.LXVector;
@@ -30,11 +36,12 @@ public class ModelImageProjector extends LXComponent {
         S8,
     };
 
-    public final CompoundParameter thetaParam = new CompoundParameter("theta", 0, -180, 180);
-    public final CompoundParameter phiParam = new CompoundParameter("phi", 0, -180, 180);
+    public final BoundedParameter thetaParam = new BoundedParameter("theta", 0, -180, 180);
+    public final BoundedParameter phiParam = new BoundedParameter("phi", 0, -180, 180);
     public final EnumParameter<Projection> projectionParam = new EnumParameter<>("proj", Projection.PLANAR);
     public final BooleanParameter flipIParam = new BooleanParameter("flipi", false);
     public final BooleanParameter flipJParam = new BooleanParameter("flipj", false);
+    public final DiscreteParameter blurParam = new DiscreteParameter("blur", 0, 0, 100);
 
     private LXModel model;
     private final float pointu[];
@@ -53,28 +60,75 @@ public class ModelImageProjector extends LXComponent {
         addParameter(projectionParam);
         addParameter(flipIParam);
         addParameter(flipJParam);
+        addParameter(blurParam);
     }
 
-    // there's gotta be a better way
+    private static LXParameter cloneParameter(LXParameter p) {
+        LXParameter pp = null;
+
+        // parameters must be in reverse order of generality
+        if (p instanceof BoundedParameter) {
+            BoundedParameter ourParam = (BoundedParameter)p;
+            pp = new BoundedParameter(ourParam.getLabel(), ourParam.getValue(),
+                        ourParam.range.min, ourParam.range.max);
+        }
+        else if (p instanceof EnumParameter) {
+            pp = new EnumParameter(p.getLabel(), ((EnumParameter)p).getEnum());
+        }
+        else if (p instanceof DiscreteParameter) {
+            DiscreteParameter ourParam = (DiscreteParameter)p;
+            pp = new DiscreteParameter(ourParam.getLabel(), ourParam.getValuei(),
+                        ourParam.getMinValue(), ourParam.getMaxValue() + 1);
+            String[] options = ourParam.getOptions();
+            if (options != null) {
+                ((DiscreteParameter)pp).setOptions(options);
+            }
+        }
+        else if (p instanceof BooleanParameter) {
+            BooleanParameter ourParam = (BooleanParameter)p;
+            pp = new BooleanParameter(ourParam.getLabel(), ourParam.getValueb());
+            ((BooleanParameter)pp).setMode(ourParam.getMode());
+        }
+
+        if (pp == null)
+            return null;
+
+        if (pp instanceof LXListenableParameter) {
+            LXListenableParameter lp = (LXListenableParameter)pp;
+            lp.setFormatter(p.getFormatter());
+            lp.setUnits(p.getUnits());
+            lp.setPolarity(p.getPolarity());
+            lp.setDescription(p.getDescription());
+            lp.setShouldSerialize(p.getShouldSerialize());
+            lp.setVisible(p.isVisible());
+            lp.setPriority(p.getPriority());
+            lp.setSupportsOscTransmit(p.supportsOscTransmit());
+        }
+
+        return pp;
+    }
+
     public void addToPattern(LXPattern pattern) {
-        CompoundParameter thetaParam = new CompoundParameter("theta", 0, -180, 180);
-        CompoundParameter phiParam = new CompoundParameter("phi", 0, -180, 180);
-        EnumParameter<Projection> projectionParam = new EnumParameter<>("proj", Projection.PLANAR);
-        BooleanParameter flipIParam = new BooleanParameter("flipi", false);
-        BooleanParameter flipJParam = new BooleanParameter("flipj", false);
+        List<LXParameter> patternParams = new ArrayList<>();
+        for (LXParameter p : getParameters()) {
+            if (!(p instanceof LXListenableParameter))
+                continue;
 
-        thetaParam.addListener(p -> this.thetaParam.setValue(p.getValue()));
-        phiParam.addListener(p -> this.phiParam.setValue(p.getValue()));
-        projectionParam.addListener(p -> this.projectionParam.setValue(((EnumParameter)p).getEnum()));
-        flipIParam.addListener(p -> this.flipIParam.setValue(((BooleanParameter)p).getValueb()));
-        flipJParam.addListener(p -> this.flipJParam.setValue(((BooleanParameter)p).getValueb()));
+            LXListenableParameter patternParam = (LXListenableParameter)cloneParameter(p);
+            if (patternParam == null)
+                continue;
 
-        pattern.addParameter(thetaParam);
-        pattern.addParameter(phiParam);
-        pattern.addParameter(projectionParam);
-        pattern.addParameter(flipIParam);
-        pattern.addParameter(flipJParam);
+            if (p instanceof EnumParameter) {
+                patternParam.addListener(pp -> ((EnumParameter)p).setValue(((EnumParameter)pp).getEnum()));
+            }
+            else {
+                patternParam.addListener(pp -> p.setValue(pp.getValue()));
+            }
 
+            patternParams.add(patternParam);
+        }
+
+        pattern.addParameters(patternParams);
         setParent(pattern);
     }
 
@@ -84,7 +138,9 @@ public class ModelImageProjector extends LXComponent {
 
     @Override
     public void onParameterChanged(LXParameter p) {
-        clearCache();
+        if (p != blurParam) {
+            clearCache();
+        }
     }
 
     private void project(Iterable<LXVector> vecs) {
@@ -183,6 +239,7 @@ public class ModelImageProjector extends LXComponent {
 
         project(vecs);
 
+        int blur = blurParam.getValuei();
         int width = image.getWidth();
         int height = image.getHeight();
         int wlo = flipIParam.getValueb() ? width - 1 : 0;
@@ -190,10 +247,39 @@ public class ModelImageProjector extends LXComponent {
         int hlo = flipJParam.getValueb() ? 0 : height - 1;
         int hhi = flipJParam.getValueb() ? height - 1 : 0;
 
-        for (LXVector vec : vecs) {
+        StreamSupport.stream(vecs.spliterator(), true).forEach((LXVector vec) -> {
             int i = Math.round(mapPeriodic(pointu[vec.index], 0, 1, wlo, whi));
             int j = Math.round(mapPeriodic(pointv[vec.index], 0, 1, hlo, hhi));
-            colors[vec.index] = image.getRGB(i, j);
-        }
+
+            if (blur != 0) { // apply box blur
+                int iStart = i - blur / 2; // inclusive
+                if (iStart < 0) iStart = 0;
+                int iEnd = i + blur - blur / 2 + 1; // exclusive
+                if (iEnd > width) iEnd = width;
+                int jStart = j - blur / 2; // inclusive
+                if (jStart < 0) jStart = 0;
+                int jEnd = j + blur - blur / 2 + 1; // exclusive
+                if (jEnd > height) jEnd = height;
+
+                double rSum = 0;
+                double gSum = 0;
+                double bSum = 0;
+
+                for (int k = iStart; k < iEnd; ++k) {
+                    for (int l = jStart; l < jEnd; ++l) {
+                        int c = image.getRGB(k, l);
+                        rSum += LXColor.red(c) & 0xff;
+                        gSum += LXColor.green(c) & 0xff;
+                        bSum += LXColor.blue(c) & 0xff;
+                    }
+                }
+
+                int count = (iEnd - iStart) * (jEnd - jStart);
+                colors[vec.index] = LXColor.rgb((int)(rSum / count), (int)(gSum / count), (int)(bSum / count));
+            }
+            else {
+                colors[vec.index] = image.getRGB(i, j);
+            }
+        });
     }
 }
