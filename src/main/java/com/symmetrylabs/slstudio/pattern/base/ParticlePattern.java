@@ -123,11 +123,11 @@ public abstract class ParticlePattern<M extends SLModel> extends TripleBufferedP
         addParameter(hue = new CompoundParameter("hue", -1, -1, 360));
         addParameter(saturation = new CompoundParameter("saturation", 30, 0, 100));
 
-        addParameter(enableBlobs = new BooleanParameter("enableBlobs", true));
-        addParameter(blobMaxDist = new CompoundParameter("bMaxDist", 500, 0, 1000));
-        addParameter(blobMaxAngle = new CompoundParameter("bMaxAngle", 60, 0, 90));
-        addParameter(blobPull = new CompoundParameter("bPull", 100, 0, 200));
-        addParameter(blobTrackingMode = new EnumParameter<BlobTrackingMode>("bTrackingMode", BlobTrackingMode.AVERAGE));
+        addParameter((enableBlobs = new BooleanParameter("enableBlobs", false)).setVisible(false));
+        addParameter((blobMaxDist = new CompoundParameter("bMaxDist", 500, 0, 1000)).setVisible(false));
+        addParameter((blobMaxAngle = new CompoundParameter("bMaxAngle", 60, 0, 90)).setVisible(false));
+        addParameter((blobPull = new CompoundParameter("bPull", 100, 0, 200)).setVisible(false));
+        addParameter((blobTrackingMode = new EnumParameter<BlobTrackingMode>("bTrackingMode", BlobTrackingMode.AVERAGE)).setVisible(false));
     }
 
     @Override
