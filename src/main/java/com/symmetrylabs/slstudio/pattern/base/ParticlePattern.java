@@ -28,7 +28,7 @@ import com.symmetrylabs.util.CubeMarker;
 import com.symmetrylabs.util.OctahedronWithArrow;
 import com.symmetrylabs.slstudio.model.LXPointNormal;
 
-public abstract class ParticlePattern extends SLPattern<SLModel> implements MarkerSource {
+public abstract class ParticlePattern<M extends SLModel> extends TripleBufferedPattern<M> implements MarkerSource {
     private static final double SQRT_2PI = FastMath.sqrt(2 * FastMath.PI);
 
     public static final int DEFAULT_PARTICLE_GROUP_COUNT = 16;

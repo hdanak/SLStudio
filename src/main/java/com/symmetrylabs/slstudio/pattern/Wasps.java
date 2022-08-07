@@ -1,13 +1,15 @@
 package com.symmetrylabs.slstudio.pattern;
 
-import com.symmetrylabs.slstudio.pattern.base.ParticlePattern;
 import org.apache.commons.math3.util.FastMath;
 
 import heronarts.lx.LX;
 import heronarts.lx.parameter.CompoundParameter;
 import heronarts.lx.parameter.BooleanParameter;
 
-public class Wasps extends ParticlePattern {
+import com.symmetrylabs.slstudio.model.SLModel;
+import com.symmetrylabs.slstudio.pattern.base.ParticlePattern;
+
+public class Wasps extends ParticlePattern<SLModel> {
     private final double SQRT_2PI = FastMath.sqrt(2 * FastMath.PI);
 
     public CompoundParameter speed;

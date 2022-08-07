@@ -1,12 +1,16 @@
-package com.symmetrylabs.slstudio.render;
+package com.symmetrylabs.slstudio.pattern.base;
 
 import java.util.Arrays;
+import java.util.List;
 
-import heronarts.lx.model.LXFixture;
+import heronarts.lx.LX;
+import heronarts.lx.PolyBuffer;
+import heronarts.lx.transform.LXVector;
 
 import com.symmetrylabs.util.TripleBuffer;
+import com.symmetrylabs.slstudio.model.SLModel;
 
-public class TripleBufferedRenderer extends Renderer {
+public class TripleBufferedPattern<M extends SLModel> extends SLPattern<M> {
     protected final TripleBuffer<RenderFrame> tripleBuffer;
 
     private RenderThread renderThread;
@@ -15,25 +19,45 @@ public class TripleBufferedRenderer extends Renderer {
     // TODO: why is this even necessary?
     protected volatile boolean runLoopStarted = false;
 
-    public TripleBufferedRenderer(LXFixture fixture, int[] colors, com.symmetrylabs.slstudio.render.Renderable renderable) {
-        super(fixture, colors, renderable);
+    public TripleBufferedPattern(LX lx) {
+        super(lx);
 
-        tripleBuffer = new TripleBuffer<>(() -> new RenderFrame(colors.length));
+        tripleBuffer = new TripleBuffer<>(() -> new RenderFrame(new PolyBuffer(lx)));
     }
 
-    @Override
-    public synchronized void start() {
+    public void render(double deltaMs, List<LXVector> vectors, int[] colors) { }
+
+    public void render(double deltaMs, List<LXVector> vectors, PolyBuffer polyBuffer) {
+        int[] layer = (int[])polyBuffer.getArray(PolyBuffer.Space.SRGB8);
+        render(deltaMs, vectors, layer);
+        polyBuffer.markModified(PolyBuffer.Space.SRGB8);
+    }
+
+    protected synchronized void start() {
         renderThread = new RenderThread();
         renderThread.start();
     }
 
-    @Override
-    public synchronized void stop() {
+    protected synchronized void stop() {
         if (renderThread != null) {
             renderThread.shutdown();
             renderThread = null;
             runLoopStarted = false;
         }
+    }
+
+    @Override
+    public void onActive() {
+        super.onActive();
+
+        start();
+    }
+
+    @Override
+    public void onInactive() {
+        super.onInactive();
+
+        stop();
     }
 
     public void setFPS(int fps) {
@@ -45,7 +69,7 @@ public class TripleBufferedRenderer extends Renderer {
     }
 
     @Override
-    public void run(double deltaMs) {
+    protected void run(double deltaMs, PolyBuffer.Space preferredSpace) {
         synchronized (this) {
             runLoopStarted = true;
         }
@@ -54,28 +78,30 @@ public class TripleBufferedRenderer extends Renderer {
             return;
 
         RenderFrame frame = tripleBuffer.takeSnapshot();
-        System.arraycopy(frame.buffer, 0, colors, 0, frame.buffer.length);
+        PolyBuffer.Space renderSpace = frame.polyBuffer.getBestFreshSpace();
+        if (renderSpace != null) {
+            polyBuffer.copyFrom(frame.polyBuffer, renderSpace);
+        }
     }
 
     protected class RenderFrame {
-        public int[] buffer;
+        public PolyBuffer polyBuffer;
         public volatile long renderStartNanos;
         public volatile long renderEndNanos;
 
-        public RenderFrame(int n) {
-            buffer = new int[n];
+        public RenderFrame(PolyBuffer polyBuffer) {
+            this.polyBuffer = polyBuffer;
         }
 
         public RenderFrame copy() {
-            RenderFrame f = new RenderFrame(buffer.length);
-            System.arraycopy(buffer, 0, f.buffer, 0, buffer.length);
+            RenderFrame f = new RenderFrame(polyBuffer.clone());
             f.renderStartNanos = renderStartNanos;
             f.renderEndNanos = renderEndNanos;
             return f;
         }
 
         public String toString() {
-            return "RenderFrame[ buffer=" + buffer
+            return "RenderFrame[ polyBuffer=" + polyBuffer
                 + " renderStartNanos=" + renderStartNanos
                 + " renderEndNanos=" + renderEndNanos + "]";
         }
@@ -118,8 +144,8 @@ public class TripleBufferedRenderer extends Renderer {
                 RenderFrame active = tripleBuffer.getWriteBuffer();
                 active.renderStartNanos = timeNanos;
 
-                Arrays.fill(active.buffer, 0);
-                renderable.render(deltaMs, vectors, active.buffer);
+                active.polyBuffer.setZero();
+                render(deltaMs, getVectorList(), active.polyBuffer);
 
                 long renderEndNanos = System.nanoTime();
                 long elapsedNanos = renderEndNanos - lastTimeNanos;

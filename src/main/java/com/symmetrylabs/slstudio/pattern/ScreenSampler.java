@@ -10,19 +10,17 @@ import java.awt.image.BufferedImage;
 
 import heronarts.lx.LX;
 import heronarts.lx.LXPattern;
+import heronarts.lx.PolyBuffer;
 import heronarts.lx.model.LXModel;
 import heronarts.lx.parameter.DiscreteParameter;
 import heronarts.lx.parameter.LXParameter;
 import heronarts.lx.transform.LXVector;
 
 import com.symmetrylabs.slstudio.model.SLModel;
-import com.symmetrylabs.slstudio.pattern.base.SLPattern;
+import com.symmetrylabs.slstudio.pattern.base.InterpolatingPattern;
 import com.symmetrylabs.slstudio.component.ModelImageProjector;
-import com.symmetrylabs.slstudio.render.Renderer;
-import com.symmetrylabs.slstudio.render.InterpolatingRenderer;
-import com.symmetrylabs.slstudio.render.Renderable;
 
-public class ScreenSampler extends SLPattern<SLModel> {
+public class ScreenSampler extends InterpolatingPattern<SLModel> {
 
     private DiscreteParameter screenNumberParam;
     private DiscreteParameter boundXParam, boundYParam, boundWidthParam, boundHeightParam;
@@ -105,9 +103,7 @@ public class ScreenSampler extends SLPattern<SLModel> {
     }
 
     @Override
-    //public void run(double deltaMs) {
-    //    List<LXVector> vecs = getVectorList();
-    public void render(double deltaMs, List<LXVector> vecs, int[] colors) {
+    public void render(double deltaMs, List<LXVector> vecs, PolyBuffer polyBuffer) {
 
         if (robot == null) {
             clear();
@@ -121,10 +117,8 @@ public class ScreenSampler extends SLPattern<SLModel> {
             System.err.println(e);
         }
 
-        modelImageProjector.projectImageToPoints(image, vecs, colors);
-    }
-
-    protected Renderer createRenderer(LXModel model, int[] colors, Renderable renderable) {
-        return new InterpolatingRenderer(model, colors, renderable);
+        int[] ccs = (int[]) polyBuffer.getArray(PolyBuffer.Space.SRGB8);
+        modelImageProjector.projectImageToPoints(image, vecs, ccs);
+        polyBuffer.markModified(PolyBuffer.Space.SRGB8);
     }
 }

@@ -136,9 +136,25 @@ public class PolyBuffer implements PolyBufferProvider {
     }
 
     public void fill(Space space, long value) {
-        long[] destArray = (long[]) getArray(space);
-        Arrays.fill(destArray, value);
+        if (space == Space.RGB8 || space == Space.SRGB8) {
+            int[] destArray = (int[]) getArray(space);
+            Arrays.fill(destArray, (int) value);
+        }
+        else if (space == Space.RGB16) {
+            long[] destArray = (long[]) getArray(space);
+            Arrays.fill(destArray, value);
+        }
+
         markModified(space);
+    }
+
+    public PolyBuffer clone() {
+        PolyBuffer cloned = new PolyBuffer(lx);
+        for (Space bufSpace : buffers.keySet()) {
+            cloned.copyFrom(this, bufSpace);
+        }
+        cloned.freshSpaces = EnumSet.copyOf(freshSpaces);
+        return cloned;
     }
 
     // The methods below provide support for old-style use of the PolyBuffer

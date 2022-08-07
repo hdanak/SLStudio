@@ -24,20 +24,16 @@ import heronarts.lx.parameter.DiscreteParameter;
 import heronarts.lx.parameter.LXParameter;
 
 import com.symmetrylabs.slstudio.SLStudioLX;
-import com.symmetrylabs.slstudio.render.Renderer;
-import com.symmetrylabs.slstudio.render.TripleBufferedRenderer;
-import com.symmetrylabs.slstudio.render.Renderable;
 import com.symmetrylabs.util.CaptionSource;
 import com.symmetrylabs.util.Marker;
 import com.symmetrylabs.util.MarkerSource;
 
-public abstract class SLPattern<M extends SLModel> extends LXPattern implements Renderable, MarkerSource, CaptionSource {
+public abstract class SLPattern<M extends SLModel> extends LXPattern implements MarkerSource, CaptionSource {
 
     protected final LX lx;
     protected M model;  // overrides LXPattern's model field with a more specific type
     protected boolean isModelCompatible;  // false if lx.model is of an incompatible type
 
-    private volatile Renderer renderer;
     private ReusableBuffer reusableBuffer = new ReusableBuffer();
     private boolean isManaged = false;
 
@@ -79,11 +75,6 @@ public abstract class SLPattern<M extends SLModel> extends LXPattern implements 
 
     protected void createParameters() { }
 
-    protected Renderer createRenderer(LXModel model, int[] colors, Renderable renderable) {
-        return new TripleBufferedRenderer(model, colors, renderable);
-        //return new SequentialRenderer(model, colors, renderable);
-    }
-
     public synchronized void setManagedMode(boolean isManaged) {
         boolean wasManaged = this.isManaged;
         this.isManaged = isManaged;
@@ -111,13 +102,6 @@ public abstract class SLPattern<M extends SLModel> extends LXPattern implements 
         if (lx instanceof SLStudioLX) {
             ((SLStudioLX) lx).ui.removeMarkerSource(this);
             ((SLStudioLX) lx).ui.removeCaptionSource(this);
-        }
-
-        synchronized (this) {
-            if (renderer != null) {
-                renderer.stop();
-                renderer = null;
-            }
         }
     }
 
@@ -148,38 +132,6 @@ public abstract class SLPattern<M extends SLModel> extends LXPattern implements 
 
         super.dispose();
     }
-
-    @Override
-    protected void run(double deltaMs) {
-        synchronized (this) {
-            if (!isManaged && this.renderer == null && colors != null) {
-                this.renderer = createRenderer(model, colors, this);
-                this.renderer.setVectorList(getVectorList());
-                this.renderer.start();
-            }
-        }
-
-        Renderer renderer = this.renderer;
-
-        if (renderer != null) {
-            renderer.run(deltaMs);
-        }
-        else {
-            render(deltaMs, getVectorList(), colors);
-        }
-    }
-
-    @Override
-    public void onVectorsChanged() {
-        super.onVectorsChanged();
-
-        if (renderer != null) {
-            renderer.setVectorList(getVectorList());
-        }
-    }
-
-    @Override
-    public void render(double deltaMs, List<LXVector> points, int[] layer) { }
 
     protected <T extends LXParameter> T addParam(T param) {
         addParameter(param);
