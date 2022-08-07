@@ -24,6 +24,8 @@ import com.symmetrylabs.slstudio.pattern.base.SLPattern;
 import static com.symmetrylabs.util.Utils.createInput;
 
 public abstract class TextureSlideshow extends SLPattern<SLModel> {
+    public static final String GROUP_NAME = "texture";
+
     public final CompoundParameter rate = new CompoundParameter("Rate", 3000, 10000, 250);
     public final CompoundParameter offsetX = new CompoundParameter("xOffset", 0, -1, 1);
     public final CompoundParameter offsetY = new CompoundParameter("yOffset", 0, -1, 1);

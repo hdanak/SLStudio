@@ -35,6 +35,7 @@ import com.symmetrylabs.util.Octahedron;
 import static heronarts.lx.PolyBuffer.Space.SRGB8;
 
 public class FlockWave extends SLPattern<SLModel> {
+    public static final String GROUP_NAME = "flockwave";
 
     private final PaletteLibrary paletteLibrary = PaletteLibrary.getInstance();
 

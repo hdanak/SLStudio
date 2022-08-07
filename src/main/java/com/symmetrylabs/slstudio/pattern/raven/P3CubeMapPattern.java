@@ -20,6 +20,8 @@ import static processing.core.PConstants.P3D;
 
 @RequiresProcessing
 public abstract class P3CubeMapPattern extends SLPattern<SLModel> {
+    public static final String GROUP_NAME = "raven";
+
     private PGraphics pg;
     public PGraphics pgF;
     public PGraphics pgB;
