@@ -11,7 +11,7 @@ public abstract class Renderer {
     protected final LXFixture fixture;
     protected final int[] colors;
     protected final Renderable renderable;
-    protected final List<LXVector> vectors;
+    protected List<LXVector> vectors;
 
     public Renderer(LXFixture fixture, int[] colors, Renderable renderable) {
         this.fixture = fixture;
@@ -19,9 +19,11 @@ public abstract class Renderer {
         this.renderable = renderable;
 
         vectors = new ArrayList<>();
-        for (LXPoint point : fixture.getPoints()) {
-            vectors.add(new LXVector(point));
-        }
+    }
+
+    // TODO: filter on points in fixture for per-fixture rendering
+    public void setVectorList(List<LXVector> vectors) {
+        this.vectors = vectors;
     }
 
     public void start() { }

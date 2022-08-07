@@ -154,6 +154,7 @@ public abstract class SLPattern<M extends SLModel> extends LXPattern implements 
         synchronized (this) {
             if (!isManaged && this.renderer == null && colors != null) {
                 this.renderer = createRenderer(model, colors, this);
+                this.renderer.setVectorList(getVectorList());
                 this.renderer.start();
             }
         }
@@ -165,6 +166,15 @@ public abstract class SLPattern<M extends SLModel> extends LXPattern implements 
         }
         else {
             render(deltaMs, getVectorList(), colors);
+        }
+    }
+
+    @Override
+    public void onVectorsChanged() {
+        super.onVectorsChanged();
+
+        if (renderer != null) {
+            renderer.setVectorList(getVectorList());
         }
     }
 
