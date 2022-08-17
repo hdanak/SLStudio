@@ -680,6 +680,10 @@ public class UI3dContext extends UIObject implements LXSerializable, UITabFocus 
                 if (mouseEvent.isShiftDown()) {
                         this.radius.incrementValue(dy);
                 } else if (mouseEvent.isMetaDown() || mouseEvent.isControlDown()) {
+                        // amount of movement should be inverse to zoom level
+                        dx *= radius.getValuef() / 120;
+                        dy *= radius.getValuef() / 120;
+
                         float dcx = dx * (float) Math.cos(this.thetaDamped.getValuef());
                         float dcz = dx * (float) Math.sin(this.thetaDamped.getValuef());
                         setCenter(this.center.x - dcx, this.center.y + dy, this.center.z - dcz);
@@ -692,6 +696,10 @@ public class UI3dContext extends UIObject implements LXSerializable, UITabFocus 
             if (mouseEvent.isShiftDown()) {
                 this.radius.incrementValue(dy);
             } else if (mouseEvent.isMetaDown() || mouseEvent.isControlDown()) {
+                // amount of movement should be inverse to zoom level
+                dx *= radius.getValuef() / 120;
+                dy *= radius.getValuef() / 120;
+
                 float dcx = dx * (float) Math.cos(this.thetaDamped.getValuef());
                 float dcz = dx * (float) Math.sin(this.thetaDamped.getValuef());
                 setCenter(this.center.x + dcx, this.center.y - dcz, this.center.z + dy);
