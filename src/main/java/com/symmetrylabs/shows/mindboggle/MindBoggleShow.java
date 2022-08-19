@@ -95,6 +95,13 @@ public class MindBoggleShow implements Show, HasWorkspace {
     @Override
     public void setupUi(SLStudioLX lx, SLStudioLX.UI ui) {
         workspace = new Workspace(lx, ui, "shows/" + SHOW_NAME);
+        workspace.setRequestsBeforeSwitch(2); // needed for Vezer
+    }
+
+    @Override
+    public void setupUi(LX lx) {
+        workspace = new Workspace(lx, (SLStudioLX.UI) null, "shows/" + SHOW_NAME);
+        workspace.setRequestsBeforeSwitch(2); // needed for Vezer
     }
 
     @Override
