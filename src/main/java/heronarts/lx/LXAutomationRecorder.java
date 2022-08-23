@@ -36,6 +36,7 @@ import heronarts.lx.parameter.LXParameter;
 import heronarts.lx.osc.LXOscComponent;
 import heronarts.lx.osc.OscMessage;
 import heronarts.lx.osc.LXOscEngine;
+import heronarts.lx.warp.LXWarp;
 
 
 
@@ -342,11 +343,14 @@ public class LXAutomationRecorder extends LXRunnableComponent implements LXEngin
         for (LXEffect effect : channel.getEffects()) {
             registerComponent(path + "/effect/" + effect.getClass().getName(), effect);
         }
-        
+        for (LXWarp warp : channel.getWarps()) {
+            registerComponent(path + "/warp/" + warp.getClass().getName(), warp);
+        }
+
         return this;
     }
 
-    private LXAutomationRecorder registerComponent(String prefix, LXLayeredComponent component) {
+    private LXAutomationRecorder registerComponent(String prefix, LXComponent component) {
         for (LXParameter parameter : component.getParameters()) {
             if (parameter instanceof LXListenableParameter) {
                 registerParameter(prefix + "/" + parameter.getLabel(), (LXListenableParameter) parameter);
@@ -478,6 +482,9 @@ public class LXAutomationRecorder extends LXRunnableComponent implements LXEngin
         }
         for (LXEffect effect : engine.masterChannel.getEffects()) {
             registerComponent("effect/" + effect.getClass().getName(), effect);
+        }
+        for (LXWarp warp : engine.masterChannel.getWarps()) {
+            registerComponent("warp/" + warp.getClass().getName(), warp);
         }
         engine.midi.addListener(this);
         engine.addMessageListener(this);
