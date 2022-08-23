@@ -25,10 +25,11 @@ public class MindBoggleShow implements Show, HasWorkspace {
 
     private static final String OBJ_FILENAME = "model.obj";
 
-    private static final int PIXLITE_OUTPUT_COUNT = 16;
+    private static final int PIXLITE_OUTPUT_COUNT = 4;
     private static final String[] PIXLITE_IPS = {
         "10.200.1.128",
         "10.200.1.129",
+        "10.200.1.130",
     };
 
     private Workspace workspace;
