@@ -91,6 +91,8 @@ public class LXEngine extends LXComponent implements LXOscComponent, LXModulatio
 
     private final LX lx;
 
+    public final LXAutomationRecorder automation;
+
     public final LXMidiEngine midi;
 
     public final LXAudioEngine audio;
@@ -425,6 +427,10 @@ public class LXEngine extends LXComponent implements LXOscComponent, LXModulatio
         // Remote control
         this.mutations = new LXMutationQueue(lx);
         LX.initTimer.log("Engine: Remote control");
+
+        // Automation Recorder
+        this.automation = new LXAutomationRecorder(lx, this);
+        LX.initTimer.log("Engine: Automation Recorder");
 
         // Parameters
         addParameter("speed", this.speed);
@@ -938,6 +944,7 @@ public class LXEngine extends LXComponent implements LXOscComponent, LXModulatio
         // Mutate by master speed for everything else
         deltaMs *= this.speed.getValue();
 
+        this.automation.loop(deltaMs);
         this.modulation.loop(deltaMs);
         this.lx.palette.loop(deltaMs);
         this.lx.swatches.loop(deltaMs);
@@ -1259,6 +1266,7 @@ public class LXEngine extends LXComponent implements LXOscComponent, LXModulatio
     private static final String KEY_PALETTE = "palette";
     private static final String KEY_LOOKS = "looks";
     private static final String KEY_MASTER = "master";
+    private static final String KEY_AUTOMATION = "automation";
     private static final String KEY_TEMPO = "tempo";
     private static final String KEY_AUDIO = "audio";
     private static final String KEY_COMPONENTS = "components";
@@ -1277,6 +1285,7 @@ public class LXEngine extends LXComponent implements LXOscComponent, LXModulatio
         obj.add(KEY_MASTER, LXSerializable.Utils.toObject(lx, this.masterChannel));
         obj.add(KEY_TEMPO, LXSerializable.Utils.toObject(lx, this.lx.tempo));
         obj.add(KEY_AUDIO, LXSerializable.Utils.toObject(lx, this.audio));
+        obj.add(KEY_AUTOMATION, LXSerializable.Utils.toObject(lx, this.automation));
         obj.add(KEY_OUTPUT, LXSerializable.Utils.toObject(lx, this.output));
         obj.add(KEY_COMPONENTS, LXSerializable.Utils.toObject(lx, this.components));
         obj.add(KEY_MODULATION, LXSerializable.Utils.toObject(lx, this.modulation));
@@ -1346,6 +1355,10 @@ public class LXEngine extends LXComponent implements LXOscComponent, LXModulatio
         // Audio setup
         if (obj.has(KEY_AUDIO)) {
             this.audio.load(lx, obj.getAsJsonObject(KEY_AUDIO));
+        }
+
+        if (obj.has(KEY_AUTOMATION)) {
+            this.automation.load(lx, obj.getAsJsonObject(KEY_AUTOMATION));
         }
 
         // Generic components
