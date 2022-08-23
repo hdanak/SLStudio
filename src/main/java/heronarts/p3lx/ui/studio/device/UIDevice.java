@@ -35,6 +35,7 @@ import heronarts.lx.parameter.BooleanParameter;
 import heronarts.lx.parameter.BoundedParameter;
 import heronarts.lx.parameter.DiscreteParameter;
 import heronarts.lx.parameter.LXListenableNormalizedParameter;
+import heronarts.lx.parameter.LXListenableParameter;
 import heronarts.lx.parameter.LXParameter;
 import heronarts.lx.parameter.LXParameterListener;
 import heronarts.lx.parameter.StringParameter;
@@ -48,6 +49,7 @@ import heronarts.p3lx.ui.component.UIButton;
 import heronarts.p3lx.ui.component.UIKnob;
 import heronarts.p3lx.ui.component.UISwitch;
 import heronarts.p3lx.ui.component.UITextBox;
+import heronarts.p3lx.ui.component.UILabel;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.event.KeyEvent;
@@ -215,14 +217,15 @@ public abstract class UIDevice extends UI2dContainer implements UIMouseFocus, UI
         return
             parameter instanceof BoundedParameter ||
             parameter instanceof DiscreteParameter ||
-            parameter instanceof BooleanParameter;
+            parameter instanceof BooleanParameter ||
+            (parameter instanceof StringParameter && parameter != component.label);
     }
 
     protected void buildDefaultControlUI(LXComponent component) {
-        List<LXListenableNormalizedParameter> params = new ArrayList<LXListenableNormalizedParameter>();
+        List<LXListenableParameter> params = new ArrayList<LXListenableParameter>();
         for (LXParameter parameter : component.getParameters()) {
-            if (isEligibleControlParameter(component, parameter)) {
-                params.add((LXListenableNormalizedParameter) parameter);
+            if (parameter instanceof LXListenableParameter && isEligibleControlParameter(component, parameter)) {
+                params.add((LXListenableParameter) parameter);
             }
         }
         int perRow;
@@ -235,7 +238,7 @@ public abstract class UIDevice extends UI2dContainer implements UIMouseFocus, UI
             }
         }
         int ki = 0;
-        for (LXListenableNormalizedParameter param : params) {
+        for (LXListenableParameter param : params) {
             if (!param.isVisible()) {
                 continue;
             }
@@ -243,11 +246,18 @@ public abstract class UIDevice extends UI2dContainer implements UIMouseFocus, UI
             float y = 7 + (ki / perRow) * (UIKnob.HEIGHT + 10);
             if (param instanceof BoundedParameter || param instanceof DiscreteParameter) {
                 new UIKnob(x, y)
-                        .setParameter(param)
+                        .setParameter((LXListenableNormalizedParameter)param)
                         .addToContainer(this);
             } else if (param instanceof BooleanParameter) {
                 new UISwitch(x, y)
-                        .setParameter(param)
+                        .setParameter((LXListenableNormalizedParameter)param)
+                        .addToContainer(this);
+            } else if (param instanceof StringParameter) {
+                new UITextBox(x, y, UIKnob.WIDTH, UIKnob.HEIGHT / 2)
+                        .setParameter((StringParameter)param)
+                        .addToContainer(this);
+                new UILabel(x, y + UIKnob.HEIGHT / 2, UIKnob.WIDTH, UIKnob.HEIGHT / 2)
+                        .setLabel(param.getLabel())
                         .addToContainer(this);
             } else {
                 // Hey developer: probably added a type in isEligibleControlParameter() that wasn't handled down here.
