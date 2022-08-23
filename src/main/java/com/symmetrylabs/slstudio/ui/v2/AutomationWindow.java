@@ -22,6 +22,7 @@ public class AutomationWindow extends CloseableWindow {
     @Override
     protected void drawContents() {
         automation.armRecord.setValue(UI.checkbox("Armed", automation.armRecord.isOn()));
+        MainMenu.getInstance().setOscRoute(automation.armRecord);
 
         UI.sameLine();
         if (automation.armRecord.isOn()) {
@@ -34,6 +35,8 @@ public class AutomationWindow extends CloseableWindow {
             if (UI.button("Record")) {
                 automation.trigger();
             }
+            MainMenu.getInstance().setOscRoute(automation.record);
+
             if (wasRunning) {
                 UI.popColor(3);
             }
@@ -47,6 +50,8 @@ public class AutomationWindow extends CloseableWindow {
             if (UI.button("Play")) {
                 automation.trigger();
             }
+            MainMenu.getInstance().setOscRoute(automation.play);
+
             if (wasRunning) {
                 UI.popColor(3);
             }
@@ -56,6 +61,7 @@ public class AutomationWindow extends CloseableWindow {
         if (UI.button("Stop")) {
             automation.reset();
         }
+        MainMenu.getInstance().setOscRoute(automation.stop);
 
         if (automation.isRunning()) {
             if (automation.armRecord.isOn()) {
@@ -75,8 +81,11 @@ public class AutomationWindow extends CloseableWindow {
             }
         }
 
+        pui.draw(automation.looping);
+
         UI.spacing(1, 5);
         automation.triggerVezer.setValue(UI.checkbox("Trigger Vezer Sequence", automation.triggerVezer.isOn()));
+        MainMenu.getInstance().setOscRoute(automation.triggerVezer);
 
         pui.draw(automation.vezerIpAddress);
         pui.draw(automation.vezerOscPort);
@@ -85,4 +94,4 @@ public class AutomationWindow extends CloseableWindow {
 
     }
 }
-    
+

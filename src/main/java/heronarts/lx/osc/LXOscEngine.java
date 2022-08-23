@@ -80,6 +80,7 @@ public class LXOscEngine extends LXComponent {
     private static final String ROUTE_SATURATION = "saturation";
     private static final String ROUTE_BRIGHTNESS = "brightness";
     private static final String ROUTE_WARP = "warp";
+    private static final String ROUTE_AUTOMATION = "automation";
 
     public final static int DEFAULT_RECEIVE_PORT = 3030;
     public final static int DEFAULT_TRANSMIT_PORT = 3131;
@@ -173,6 +174,8 @@ public class LXOscEngine extends LXComponent {
                         oscComponent(message, lx.engine, parts, 3);
                     } else if (parts[2].equals(ROUTE_MIDI)) {
                         oscMidi(message, parts, 3);
+                    } else if (parts[2].equals(ROUTE_AUTOMATION)) {
+                        oscComponent(message, lx.engine.automation, parts, 3);
                     } else if (parts[2].equals(ROUTE_TEMPO)) {
                         oscTempo(message, parts, 3);
                     } else if (parts[2].equals(ROUTE_OUTPUT)) {

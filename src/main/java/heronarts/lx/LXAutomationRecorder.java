@@ -90,14 +90,21 @@ public class LXAutomationRecorder extends LXRunnableComponent implements LXEngin
     private final LXEngine engine;
     private LXOscEngine.Transmitter osc = null;
 
-    public final BooleanParameter armRecord = new BooleanParameter("ARM", false);
-    public final BooleanParameter triggerVezer = new BooleanParameter("VEZER", false);
+    public final BooleanParameter armRecord = new BooleanParameter("ArmRecord", false);
+    public final BooleanParameter triggerVezer = new BooleanParameter("TriggerVezer", false);
 
-    public final StringParameter vezerIpAddress = new StringParameter("IpAddress", DEFAULT_VEZER_IP_ADDRESS);
-    public final StringParameter vezerOscPort = new StringParameter("Port", DEFAULT_VEZER_OSC_PORT);
-    public final StringParameter vezerSequence = new StringParameter("Sequence", DEFAULT_VEZER_SEQUENCE);
+    public final StringParameter vezerIpAddress = new StringParameter("VezerIpAddress", DEFAULT_VEZER_IP_ADDRESS);
+    public final StringParameter vezerOscPort = new StringParameter("VezerPort", DEFAULT_VEZER_OSC_PORT);
+    public final StringParameter vezerSequence = new StringParameter("VezerSequence", DEFAULT_VEZER_SEQUENCE);
 
-    public final BooleanParameter looping = new BooleanParameter("LOOP", false);
+    public final BooleanParameter looping = new BooleanParameter("Loop", false);
+
+    public final BooleanParameter record = new BooleanParameter("Record")
+            .setMode(BooleanParameter.Mode.MOMENTARY);
+    public final BooleanParameter play = new BooleanParameter("Play")
+            .setMode(BooleanParameter.Mode.MOMENTARY);
+    public final BooleanParameter stop = new BooleanParameter("Stop")
+            .setMode(BooleanParameter.Mode.MOMENTARY);
 
     private final List<LXChannel> channels = new ArrayList<LXChannel>();
     private final List<LXParameter> automatableParameters = new ArrayList<>();
@@ -113,13 +120,19 @@ public class LXAutomationRecorder extends LXRunnableComponent implements LXEngin
 
     public LXAutomationRecorder(LX lx, LXEngine engine) {
         super(lx, "automation");
+
         this.lx = lx;
         this.engine = engine;
-        setParent(engine);
-        engine.addParameter(triggerVezer);
-        engine.addParameter(vezerSequence);
-        engine.addParameter(vezerOscPort);
-        engine.addParameter(vezerIpAddress);
+
+        addParameter(armRecord);
+        addParameter(triggerVezer);
+        addParameter(vezerSequence);
+        addParameter(vezerOscPort);
+        addParameter(vezerIpAddress);
+        addParameter(looping);
+        addParameter(record);
+        addParameter(play);
+        addParameter(stop);
 
         try {
             int port = Integer.parseInt(vezerOscPort.getString());
@@ -142,6 +155,36 @@ public class LXAutomationRecorder extends LXRunnableComponent implements LXEngin
         vezerOscPort.addListener(new LXParameterListener() {
             public void onParameterChanged(LXParameter parameter) {
                 osc.setPort(Integer.parseInt(vezerOscPort.getString()));
+            }
+        });
+
+        record.addListener((LXParameter p) -> {
+            if (record.isOn()) {
+                record.setValue(false);
+
+                if (!armRecord.isOn())
+                    return;
+
+                LXAutomationRecorder.this.trigger();
+            }
+        });
+
+        play.addListener((LXParameter p) -> {
+            if (play.isOn()) {
+                play.setValue(false);
+
+                if (armRecord.isOn())
+                    return;
+
+                LXAutomationRecorder.this.trigger();
+            }
+        });
+
+        stop.addListener((LXParameter p) -> {
+            if (stop.isOn()) {
+                stop.setValue(false);
+
+                LXAutomationRecorder.this.reset();
             }
         });
     }
@@ -311,7 +354,7 @@ public class LXAutomationRecorder extends LXRunnableComponent implements LXEngin
     }
 
     public String getOscAddress() {
-        return ((LXOscComponent) this.engine).getOscAddress() + "/automation";
+        return "/lx/automation";
     }
 
     private LXAutomationRecorder registerEngine() {
