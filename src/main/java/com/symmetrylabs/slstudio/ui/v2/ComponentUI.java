@@ -6,6 +6,7 @@ import heronarts.lx.color.ColorParameter;
 import heronarts.lx.parameter.BooleanParameter;
 import heronarts.lx.parameter.BoundedParameter;
 import heronarts.lx.parameter.DiscreteParameter;
+import heronarts.lx.parameter.StringParameter;
 import heronarts.lx.parameter.LXParameter;
 
 import java.util.*;
@@ -43,6 +44,8 @@ public class ComponentUI {
             } else if (param instanceof BoundedParameter || param instanceof BooleanParameter) {
                 knobs.add(param);
             } else if (param instanceof DiscreteParameter) {
+                params.add(param);
+            } else if (param instanceof StringParameter && param != comp.label) {
                 params.add(param);
             }
         }
