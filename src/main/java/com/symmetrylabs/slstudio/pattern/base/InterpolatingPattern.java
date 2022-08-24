@@ -11,7 +11,7 @@ import com.symmetrylabs.color.Ops8;
 import com.symmetrylabs.color.Ops16;
 import com.symmetrylabs.slstudio.model.SLModel;
 
-public class InterpolatingPattern<M extends SLModel> extends TripleBufferedPattern<M> {
+public abstract class InterpolatingPattern<M extends SLModel> extends TripleBufferedPattern<M> {
     private RenderFrame frameA, frameB;
 
     public InterpolatingPattern(LX lx) {

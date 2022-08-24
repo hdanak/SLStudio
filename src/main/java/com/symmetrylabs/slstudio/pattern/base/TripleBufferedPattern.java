@@ -10,7 +10,7 @@ import heronarts.lx.transform.LXVector;
 import com.symmetrylabs.util.TripleBuffer;
 import com.symmetrylabs.slstudio.model.SLModel;
 
-public class TripleBufferedPattern<M extends SLModel> extends SLPattern<M> {
+public abstract class TripleBufferedPattern<M extends SLModel> extends SLPattern<M> {
     protected final TripleBuffer<RenderFrame> tripleBuffer;
 
     private RenderThread renderThread;
