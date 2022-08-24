@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collections;
 
 import heronarts.lx.LX;
 import heronarts.lx.model.LXPoint;
@@ -14,7 +15,6 @@ import com.symmetrylabs.shows.Show;
 import com.symmetrylabs.shows.HasWorkspace;
 import com.symmetrylabs.slstudio.SLStudioLX;
 import com.symmetrylabs.slstudio.model.SLModel;
-import com.symmetrylabs.slstudio.model.StripsModel;
 import com.symmetrylabs.slstudio.output.SimplePixlite;
 import com.symmetrylabs.slstudio.output.PointsGrouping;
 import com.symmetrylabs.slstudio.workspaces.Workspace;
@@ -34,45 +34,75 @@ public class MindBoggleShow implements Show, HasWorkspace {
 
     private Workspace workspace;
 
-    // map from output => points, where output starts from 1
-    private Map<Integer, List<LXPoint>> pointsPerOutput = new HashMap<>();
+    // list of fixtures per output, where output starts from 1
+    private Map<Integer, List<MindBoggleModel.Neuron>> fixturesPerOutput = new HashMap<>();
 
-    public SLModel buildModel() {
+    public MindBoggleModel buildModel() {
+    //public SLModel buildModel() {
 
         ObjParser objParser = new ObjParser();
         objParser.parse(OBJ_FILENAME);
 
-        List<LXPoint> points = new ArrayList<>();
-        for (ObjParser.FixtureObject f : objParser.fixtures) {
+        List<MindBoggleModel.Neuron> fixtures = new ArrayList<>();
+        for (ObjParser.ParsedFixture f : objParser.fixtures) {
 
-            List<LXPoint> outputPoints = null;
+            // make all the model points in output order first
+            LXPoint[] fixturePoints = new LXPoint[f.verts.size()];
+            for (int i = 0; i < f.verts.size(); ++i) {
+                int[] fixtureVertIdxToShapeSeg = objParser.fixtureVertIdxToShapeSegByNum.get(f.num);
+                if (fixtureVertIdxToShapeSeg == null || fixtureVertIdxToShapeSeg[i] == -1) {
+                    continue;
+                }
+
+                LXVector v = f.verts.get(i);
+                fixturePoints[i] = new LXPoint(v.x, v.y, v.z);
+            }
+
+            List<MindBoggleModel.Neuron> outputFixtures = null;
             if (f.output > 0) {
-                pointsPerOutput.putIfAbsent(f.output, new ArrayList<LXPoint>());
-                outputPoints = pointsPerOutput.get(f.output);
+                fixturesPerOutput.putIfAbsent(f.output, new ArrayList<MindBoggleModel.Neuron>());
+                outputFixtures = fixturesPerOutput.get(f.output);
             }
 
             System.out.println(LOG_TAG + "Adding points for fixture " + f.num + " with output " + f.output);
-            for (LXVector v : f.verts) {
-                LXPoint p = new LXPoint(v.x, v.y, v.z);
 
-                points.add(p);
+            List<MindBoggleModel.AxonSegment> axonSegments = new ArrayList<>();
+            List<MindBoggleModel.Dendrite> dendrites = new ArrayList<>();
 
-                if (outputPoints != null) {
-                    outputPoints.add(p);
+            List<ObjParser.ShapeSection> shapeSections = objParser.shapeSectionsByNum.get(f.num);
+            for (ObjParser.ShapeSection shapeSection : shapeSections) {
+                List<LXPoint> partPoints = new ArrayList<>();
+                System.out.println("ShapeSection type=" + shapeSection.type
+                        + " shapeStart=" + shapeSection.startShapeVertexIndex + " shapeEnd=" + shapeSection.endShapeVertexIndex
+                        + " fixtureStart=" + shapeSection.startFixtureVertexIndex + " fixtureEnd=" + shapeSection.endFixtureVertexIndex);
+                for (int i = shapeSection.startFixtureVertexIndex; i < shapeSection.endFixtureVertexIndex; ++i) {
+                    partPoints.add(fixturePoints[i]);
+                }
+
+                System.out.println(partPoints.size() + " points");
+
+                if (partPoints.isEmpty())
+                    continue;
+
+                if (shapeSection.type == ObjParser.ShapeSection.Type.SPINE) {
+                    System.out.println(LOG_TAG + "Adding axon for fixture " + f.num);
+                    axonSegments.add(new MindBoggleModel.AxonSegment(partPoints));
+                }
+                else if (shapeSection.type == ObjParser.ShapeSection.Type.BRANCH) {
+                    System.out.println(LOG_TAG + "Adding dendrite for fixture " + f.num);
+                    dendrites.add(new MindBoggleModel.Dendrite(partPoints));
                 }
             }
-        }
 
-        /*
-        for (ObjParser.ShapeObject s : objParser.shapes) {
-            for (LXVector v : f.verts) {
-                points.add(new LXPoint(v.x, v.y, v.z));
+            MindBoggleModel.Neuron neuron = new MindBoggleModel.Neuron(axonSegments, dendrites);
+            fixtures.add(neuron);
+
+            if (outputFixtures != null) {
+                outputFixtures.add(neuron);
             }
         }
-        */
 
-
-        return new SLModel("mindboggle", points);
+        return new MindBoggleModel(fixtures);
     }
 
     @Override
@@ -82,8 +112,13 @@ public class MindBoggleShow implements Show, HasWorkspace {
             SimplePixlite pixlite = new SimplePixlite(lx, ip);
 
             for (int i = 0; i < PIXLITE_OUTPUT_COUNT; ++i) {
-                if (pointsPerOutput.containsKey(baseOutput + i)) {
-                    List<LXPoint> points = pointsPerOutput.get(baseOutput + i);
+                if (fixturesPerOutput.containsKey(baseOutput + i)) {
+                    List<MindBoggleModel.Neuron> fixtures = fixturesPerOutput.get(baseOutput + i);
+                    List<LXPoint> points = new ArrayList<>();
+                    for (MindBoggleModel.Neuron fixture : fixtures) {
+                        points.addAll(fixture.getPoints());
+                    }
+                    points.sort((LXPoint p1, LXPoint p2) -> { return p1.index - p2.index; });
                     pixlite.addPixliteOutput(new PointsGrouping(i+1+"").addPoints(points));
                 }
             }
