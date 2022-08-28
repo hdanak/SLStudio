@@ -88,7 +88,10 @@ class SLStudioObjExporter(Operator, ExportHelper):
             m = re.match(OBJECT_NAME_REGEXP, ob_name)
             if not m:
                 print(LOG_TAG, 'Skipping object "%s"' % ob.name)
-                continue;
+                continue
+
+            if len([c for c in ob.users_collection if c.name == 'Template']) > 0:
+                continue
 
             if m[1] == 'Fixture':
                 collections = [c for c in ob.users_collection

@@ -17,8 +17,8 @@ import com.symmetrylabs.util.FileUtils;
 public class ObjParser {
     public static final String LOG_TAG = "[ObjParser] ";
 
-    private static final double CURVE_OVERLAP_DIST_THRESH = 0.001;
-    private static final double MIN_OVERLAP_LENGTH_THRESH = 1;
+    private static final double CURVE_OVERLAP_DIST_THRESH = 0.0001;
+    private static final double MIN_OVERLAP_LENGTH_THRESH = 0.1;
 
     public static abstract class ParsedObject {
         public final String name;

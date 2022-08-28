@@ -27,9 +27,9 @@ public class MindBoggleShow implements Show, HasWorkspace {
 
     private static final int PIXLITE_OUTPUT_COUNT = 4;
     private static final String[] PIXLITE_IPS = {
+        "10.200.1.130",
         "10.200.1.128",
         "10.200.1.129",
-        "10.200.1.130",
     };
 
     private Workspace workspace;
