@@ -45,12 +45,14 @@ public class MindBoggleShow implements Show, HasWorkspace {
 
         List<MindBoggleModel.Neuron> fixtures = new ArrayList<>();
         for (ObjParser.ParsedFixture f : objParser.fixtures) {
+            System.out.println(LOG_TAG + "Adding " + f.verts.size() + " points for fixture " + f.num + " with output " + f.output);
 
             // make all the model points in output order first
             LXPoint[] fixturePoints = new LXPoint[f.verts.size()];
             for (int i = 0; i < f.verts.size(); ++i) {
                 int[] fixtureVertIdxToShapeSeg = objParser.fixtureVertIdxToShapeSegByNum.get(f.num);
                 if (fixtureVertIdxToShapeSeg == null || fixtureVertIdxToShapeSeg[i] == -1) {
+                    System.out.println(LOG_TAG + "Fixture " + f.num + " missing shape vertex mapping");
                     continue;
                 }
 
@@ -63,8 +65,6 @@ public class MindBoggleShow implements Show, HasWorkspace {
                 fixturesPerOutput.putIfAbsent(f.output, new ArrayList<MindBoggleModel.Neuron>());
                 outputFixtures = fixturesPerOutput.get(f.output);
             }
-
-            System.out.println(LOG_TAG + "Adding points for fixture " + f.num + " with output " + f.output);
 
             List<MindBoggleModel.AxonSegment> axonSegments = new ArrayList<>();
             List<MindBoggleModel.Dendrite> dendrites = new ArrayList<>();

@@ -17,7 +17,7 @@ import com.symmetrylabs.util.FileUtils;
 public class ObjParser {
     public static final String LOG_TAG = "[ObjParser] ";
 
-    private static final double CURVE_OVERLAP_DIST_THRESH = 0.0001;
+    private static final double CURVE_OVERLAP_DIST_THRESH = 0.003;
     private static final double MIN_OVERLAP_LENGTH_THRESH = 0.1;
 
     public static abstract class ParsedObject {
@@ -82,6 +82,7 @@ public class ObjParser {
     public Map<Integer, int[]> fixtureVertIdxToShapeSegByNum;
 
     private ParsedObject curObject;
+    private LXVector lastVec;
 
     public ObjParser() {
         reset();
@@ -108,6 +109,7 @@ public class ObjParser {
         }
 
         curObject = null;
+        lastVec = null;
     }
 
     public void parse(String showFilename) {
@@ -160,8 +162,13 @@ public class ObjParser {
                 }
             }
             else if ("v".equals(parts[0]) && parts.length > 3) {
-                curObject.verts.add(new LXVector(Float.parseFloat(parts[1]),
-                            Float.parseFloat(parts[2]), Float.parseFloat(parts[3])));
+                LXVector vec = new LXVector(Float.parseFloat(parts[1]) * 12,
+                            Float.parseFloat(parts[3]) * 12, Float.parseFloat(parts[2]) * 12);
+                //System.out.println(String.format("Vert dist for %s: %f", curObject.name, lastVec != null ? lastVec.dist(vec) : 0));
+                //if (lastVec == null || vec.x != lastVec.x || vec.y != lastVec.y || vec.z != lastVec.z) {
+                    curObject.verts.add(vec);
+                    lastVec = vec;
+                //}
             }
         }
 
@@ -201,15 +208,14 @@ public class ObjParser {
             int[] fixtureVertIdxToShapeSeg = new int[fixture.verts.size()];
 
             // find closest shape segment to fixture vert
+            int lastShapeVertIndex = 0;
             for (int fvi = 0; fvi < fixture.verts.size(); ++fvi) {
                 LXVector fv = fixture.verts.get(fvi);
 
                 int closestSegIndex = -1;
-                int closestValidSegIndex = -1;
                 float closestSegDist = Float.MAX_VALUE;
-                float closestValidSegDist = Float.MAX_VALUE;
 
-                for (int svi = 0; svi < shape.verts.size() - 1; ++svi) {
+                for (int svi = lastShapeVertIndex; svi < shape.verts.size() - 1; ++svi) {
                     LXVector sv1 = shape.verts.get(svi);
                     LXVector sv2 = shape.verts.get(svi + 1);
                     float segLength = segLengths[svi];
@@ -224,31 +230,41 @@ public class ObjParser {
                         float t = tmp.dot(segDeltaXs[svi], segDeltaYs[svi], segDeltaZs[svi])
                                         / (segLength * segLength);
 
-                        // TODO: fix last point being off curve
-                        if (t < 0 || t > 1) { // point is not along segment
-                            continue;
+                        // closest point along segment
+                        //if (t < 0) t = 0;
+                        if (t > 1) t = 1;
+
+                        if (t >= 0 && t <= 1) {
+                            tmp.x = sv1.x + t * segDeltaXs[svi];
+                            tmp.y = sv1.y + t * segDeltaYs[svi];
+                            tmp.z = sv1.z + t * segDeltaZs[svi];
+
+                            pointDist = fv.dist(tmp);
                         }
-
-                        tmp.x = sv1.x + t * segDeltaXs[svi];
-                        tmp.y = sv1.y + t * segDeltaYs[svi];
-                        tmp.z = sv1.z + t * segDeltaZs[svi];
-
-                        pointDist = fv.dist(tmp);
                     }
 
                     if (pointDist != -1 && pointDist < closestSegDist) {
                         closestSegIndex = svi;
                         closestSegDist = pointDist;
+                        //System.out.println("Check: idx=" + svi + " dist=" + pointDist);
+                    }
+                    else {
+                        //System.out.println("Break: idx=" + svi + " dist=" + pointDist);
+                        //break;
                     }
                 }
 
-                if (closestSegIndex == -1) {
+
+                if (closestSegIndex != -1) {
+                    System.out.println(LOG_TAG + "Closest segment index for fixture point " + fvi + " in fixture " + fixture.num + " is " + closestSegIndex + " at dist " + closestSegDist);
+                    //lastShapeVertIndex = closestSegIndex;
+                    fixtureVertIdxToShapeSeg[fvi] = closestSegIndex;
+                }
+                else {
                     System.err.println(LOG_TAG + "Could not find shape segment for point " + fvi + " in fixture " + fixture.num);
                     fixtureVertIdxToShapeSeg[fvi] = -1;
-                    continue;
                 }
 
-                fixtureVertIdxToShapeSeg[fvi] = closestSegIndex;
             }
 
             fixtureVertIdxToShapeSegByNum.put(shape.num, fixtureVertIdxToShapeSeg);
@@ -273,6 +289,9 @@ public class ObjParser {
             List<Integer> vertQueue = new ArrayList<>();
             for (int svi = 0; svi < shape.verts.size(); ++svi) {
                 LXVector v = shape.verts.get(svi);
+
+                int closestSegIndex = 0;
+                float closestSegDist = Float.MAX_VALUE;
 
                 boolean overlapFound = false;
                 for (int i = 0; i < vertQueue.size() - 1; ++i) {
@@ -307,6 +326,13 @@ public class ObjParser {
                         }
                     }
 
+                    if (pointDist != -1 && pointDist < closestSegDist) {
+                        closestSegIndex = i;
+                        closestSegDist = pointDist;
+                    }
+                    else {
+                    }
+
                     if (pointDist != -1 && pointDist < CURVE_OVERLAP_DIST_THRESH) {
                         overlapFound = true;
                         lastOverlapIndex = i;
@@ -314,10 +340,17 @@ public class ObjParser {
                     }
                 }
 
+                if (!vertQueue.isEmpty()) {
+                    //System.out.println(LOG_TAG + "Closest: svi=" + svi + " distance=" + closestSegDist + " (" + vertQueue.get(closestSegIndex) + ")");
+                }
+
                 if (!overlapMode && overlapFound) {
+                    System.out.println(LOG_TAG + "Shape " + shape.num + " Overlap start: " + svi + " (" + vertQueue.get(lastOverlapIndex) + ", " + (vertQueue.get(lastOverlapIndex) + 1) + ")");
                     overlapMode = true;
                 }
                 else if (overlapMode && !overlapFound) {
+                    System.out.println(LOG_TAG + "Shape " + shape.num + " Overlap end: " + svi + " (" + vertQueue.get(lastOverlapIndex) + ", " + (vertQueue.get(lastOverlapIndex) + 1) + ")");
+
                     // check if overlapping section is long enough to qualify
                     double overlapLength = calcShapeSectionLength(shape, vertQueue.get(lastOverlapIndex), vertQueue.get(vertQueue.size() - 1));
                     if (overlapLength > MIN_OVERLAP_LENGTH_THRESH) {
@@ -337,7 +370,7 @@ public class ObjParser {
                         vertQueue.clear();
                     }
                     else {
-                        System.out.println("Did not meet overlap threshold, " + shape.num + " " + vertQueue.get(lastOverlapIndex) + " " + vertQueue.get(vertQueue.size() - 1));
+                        System.out.println("Did not meet overlap length threshold, shape " + shape.num + ": " + vertQueue.get(lastOverlapIndex) + " " + vertQueue.get(vertQueue.size() - 1));
                     }
 
                     overlapMode = false;
