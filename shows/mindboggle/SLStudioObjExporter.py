@@ -15,6 +15,40 @@ LOG_TAG = '[SLStudioObjExporter]'
 OBJECT_NAME_REGEXP = re.compile(r'^(Fixture|Shape)\.(\d+)$')
 OUTPUT_NAME_REGEXP = re.compile(r'^(Output)\.(\d+)$')
 
+def extract_vertex_coords(depsgraph, ob_main):
+    vcos = []
+
+    obs = [(ob_main, ob_main.matrix_world)]
+    if ob_main.is_instancer:
+        obs += [(dup.instance_object.original, dup.matrix_world.copy())
+                    for dup in depsgraph.object_instances
+                    if dup.parent and dup.parent.original == ob_main]
+
+    for ob, ob_matrix in obs:
+        if ob.type == 'EMPTY':
+            for child in ob.children:
+                if child.name.startswith(ob.name):
+                    vcos.extend(extract_vertex_coords(depsgraph, child))
+        else:
+            # apply modifiers
+            ob_for_convert = ob.evaluated_get(depsgraph) # else ob.original
+
+            try:
+                try:
+                    mesh = ob_for_convert.to_mesh()
+                except RuntimeError as e:
+                    print(LOG_TAG, 'Could not convert object "%s" to mesh: %s' % (ob.name, e))
+                    continue
+
+                mesh.transform(ob_matrix)
+
+                for v in mesh.vertices:
+                    vcos.append(v.co[:])
+            finally:
+                # clean up
+                ob_for_convert.to_mesh_clear()
+    return vcos
+
 class SLStudioObjExporter(Operator, ExportHelper):
     """SLStudio Obj Export""" # tooltip
     bl_idname = "export_scene.sl_obj"  # for bpy.ops.export_scene.sl_obj
@@ -48,49 +82,28 @@ class SLStudioObjExporter(Operator, ExportHelper):
             "\n"
         ]
 
-        for ob_main in objects:
-            obs = [(ob_main, ob_main.matrix_world)]
-            if ob_main.is_instancer:
-                obs += [(dup.instance_object.original, dup.matrix_world.copy())
-                            for dup in depsgraph.object_instances
-                            if dup.parent and dup.parent.original == ob_main]
+        for ob in objects:
+            ob_name = ob.name or ''
 
-            for ob, ob_mat in obs:
+            m = re.match(OBJECT_NAME_REGEXP, ob_name)
+            if not m:
+                print(LOG_TAG, 'Skipping object "%s"' % ob.name)
+                continue
 
-                # apply modifiers
-                ob_for_convert = ob.evaluated_get(depsgraph) # else ob.original
+            if len([c for c in ob.users_collection if c.name == 'Template']) > 0:
+                continue
 
-                try:
-                    try:
-                        mesh = ob_for_convert.to_mesh()
-                    except RuntimeError as e:
-                        print(LOG_TAG, 'Could not convert object "%s" to mesh: %s' % (ob.name, e))
-                        continue
+            if m[1] == 'Fixture':
+                collections = [c for c in ob.users_collection
+                                if re.match(OUTPUT_NAME_REGEXP, c.name or '')]
+                if len(collections) > 0:
+                    ob_name += '_' + collections[0].name
 
-                    mesh.transform(ob_mat)
+            print(LOG_TAG, 'Writing object "%s"' % ob_name)
+            out_strs.append('\no %s\n' % ob_name)
 
-                    ob_name = ob.name or ''
-
-                    m = re.match(OBJECT_NAME_REGEXP, ob_name)
-                    if not m:
-                        print(LOG_TAG, 'Skipping object "%s"' % ob.name)
-                        continue;
-
-                    if m[1] == 'Fixture':
-                        collections = [c for c in ob.users_collection
-                                        if re.match(OUTPUT_NAME_REGEXP, c.name or '')]
-                        if len(collections) > 0:
-                            ob_name += '_' + collections[0].name
-
-                    print(LOG_TAG, 'Writing object "%s"' % ob_name)
-                    out_strs.append('\no %s\n' % ob_name)
-
-                    for v in mesh.vertices:
-                        out_strs.append('v %.6f %.6f %.6f\n' % v.co[:])
-
-                finally:
-                    # clean up
-                    ob_for_convert.to_mesh_clear()
+            for vco in extract_vertex_coords(depsgraph, ob):
+                out_strs.append('v %.6f %.6f %.6f\n' % vco)
 
         return out_strs
 

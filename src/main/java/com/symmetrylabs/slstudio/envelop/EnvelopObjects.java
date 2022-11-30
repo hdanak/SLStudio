@@ -4,6 +4,7 @@ import heronarts.lx.LX;
 import heronarts.lx.LXLayer;
 import heronarts.lx.LXPattern;
 import heronarts.lx.model.LXPoint;
+import heronarts.lx.transform.LXVector;
 import heronarts.lx.parameter.CompoundParameter;
 import heronarts.lx.parameter.BoundedParameter;
 import heronarts.lx.parameter.BooleanParameter;
@@ -77,8 +78,8 @@ public class EnvelopObjects extends LXPattern {
                 float z = this.z.getValuef();
                 float spreadf = spread.getValuef();
                 float falloff = 100 / (size.getValuef() + response.getValuef() * object.getValuef());
-                for (LXPoint p : model.getPoints()) {
-                    float dist = dist(p.x * spreadf, p.y, p.z * spreadf, x * spreadf, y, z * spreadf);
+                for (LXVector p : getVectors()) {
+                    float dist = dist(p.x * spreadf, /*p.y*/ 0, p.z * spreadf, x * spreadf, /*y*/0, z * spreadf);
                     float b = 100 - dist*falloff;
                     if (b > 0) {
                         addColor(p.index, LXColor.gray(b));

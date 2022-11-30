@@ -27,6 +27,7 @@ public class EnvelopOscListener implements LXOscListener {
     }
 
     public void oscMessage(OscMessage message) {
+        System.out.println("[EnvelopOscListener] Received message: " + message.getAddressPattern());
         if (message.matches("/envelop/tempo/beat")) {
             lx.tempo.trigger(message.getInt()-1);
         } else if (message.matches("/envelop/tempo/bpm")) {
