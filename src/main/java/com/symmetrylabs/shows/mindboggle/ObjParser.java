@@ -41,11 +41,13 @@ public class ObjParser {
 
     public static class ParsedFixture extends ParsedObject {
         public final int output;
+        public final String type;
 
-        public ParsedFixture(String name, int num, int output) {
+        public ParsedFixture(String name, int num, int output, String type) {
             super(name, num);
 
             this.output = output;
+            this.type = type;
         }
     }
 
@@ -75,6 +77,7 @@ public class ObjParser {
 
     public Map<Integer, ParsedShape> shapeByNum;
     public Map<Integer, ParsedFixture> fixtureByNum;
+    public Map<String, List<ParsedFixture>> fixturesByType;
 
     // fixture separated into parts bases on where shape overlaps itself
     // each "part" is a list of fixture vertex indices
@@ -94,6 +97,7 @@ public class ObjParser {
 
         shapeByNum = new HashMap<>();
         fixtureByNum = new HashMap<>();
+        fixturesByType = new HashMap<>();
         shapeSectionsByNum = new HashMap<>();
         fixtureVertIdxToShapeSegByNum = new HashMap<>();
 
@@ -112,12 +116,12 @@ public class ObjParser {
         lastVec = null;
     }
 
-    public void parse(String showFilename) {
+    public void parse(String objFilename) {
         reset();
 
-        List<String> lines = FileUtils.readShowLines(showFilename);
+        List<String> lines = FileUtils.readShowLines(objFilename);
         if (lines == null) {
-            throw new RuntimeException("Could not read model OBJ file '" + showFilename + "'");
+            throw new RuntimeException("Could not read model OBJ file '" + objFilename + "'");
         }
 
         for (String line : lines) {
@@ -143,16 +147,27 @@ public class ObjParser {
                     num = Integer.parseInt(nameParts[0].split("\\.")[1], 10);
                 }
 
-                // object named like Fixture.001_Output.001
+                // object named like Fixture.001_Output.001 or Fixture.001_Output.001_Type.Foo
                 if (parts[1].startsWith("Fixture")) {
                     int output = 0;
-                    if (nameParts.length > 1 && nameParts[1].matches("^Output\\.\\d+$")) {
-                        output = Integer.parseInt(nameParts[1].split("\\.")[1], 10);
+                    String type = null;
+                    for (int i = 1; i < nameParts.length; ++i) {
+                        if (nameParts[i].matches("^Output\\.\\d+$")) {
+                            output = Integer.parseInt(nameParts[i].split("\\.")[1], 10);
+                        }
+                        else if (nameParts[i].matches("^Type\\.\\w+$")) {
+                            type = nameParts[i].split("\\.")[1];
+                        }
                     }
 
-                    ParsedFixture fixture = new ParsedFixture(parts[1], num, output);
+                    ParsedFixture fixture = new ParsedFixture(parts[1], num, output, type);
                     curObject = fixture;
                     fixtureByNum.put(num, fixture);
+
+                    if (type != null) {
+                        fixturesByType.putIfAbsent(type, new ArrayList<ParsedFixture>());
+                        fixturesByType.get(type).add(fixture);
+                    }
                 }
                 // object named like Shape.001
                 if (parts[1].startsWith("Shape")) {
@@ -256,7 +271,7 @@ public class ObjParser {
 
 
                 if (closestSegIndex != -1) {
-                    System.out.println(LOG_TAG + "Closest segment index for fixture point " + fvi + " in fixture " + fixture.num + " is " + closestSegIndex + " at dist " + closestSegDist);
+                    //System.out.println(LOG_TAG + "Closest segment index for fixture point " + fvi + " in fixture " + fixture.num + " is " + closestSegIndex + " at dist " + closestSegDist);
                     //lastShapeVertIndex = closestSegIndex;
                     fixtureVertIdxToShapeSeg[fvi] = closestSegIndex;
                 }
@@ -345,11 +360,11 @@ public class ObjParser {
                 }
 
                 if (!overlapMode && overlapFound) {
-                    System.out.println(LOG_TAG + "Shape " + shape.num + " Overlap start: " + svi + " (" + vertQueue.get(lastOverlapIndex) + ", " + (vertQueue.get(lastOverlapIndex) + 1) + ")");
+                    //System.out.println(LOG_TAG + "Shape " + shape.num + " Overlap start: " + svi + " (" + vertQueue.get(lastOverlapIndex) + ", " + (vertQueue.get(lastOverlapIndex) + 1) + ")");
                     overlapMode = true;
                 }
                 else if (overlapMode && !overlapFound) {
-                    System.out.println(LOG_TAG + "Shape " + shape.num + " Overlap end: " + svi + " (" + vertQueue.get(lastOverlapIndex) + ", " + (vertQueue.get(lastOverlapIndex) + 1) + ")");
+                    //System.out.println(LOG_TAG + "Shape " + shape.num + " Overlap end: " + svi + " (" + vertQueue.get(lastOverlapIndex) + ", " + (vertQueue.get(lastOverlapIndex) + 1) + ")");
 
                     // check if overlapping section is long enough to qualify
                     double overlapLength = calcShapeSectionLength(shape, vertQueue.get(lastOverlapIndex), vertQueue.get(vertQueue.size() - 1));

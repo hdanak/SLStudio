@@ -12,7 +12,7 @@ from bpy.props import StringProperty
 from bpy.types import Operator
 
 LOG_TAG = '[SLStudioObjExporter]'
-OBJECT_NAME_REGEXP = re.compile(r'^(Fixture|Shape)\.(\d+)$')
+OBJECT_NAME_REGEXP = re.compile(r'^(Fixture|Shape)(_\w+)?\.(\d+)$')
 OUTPUT_NAME_REGEXP = re.compile(r'^(Output)\.(\d+)$')
 
 def extract_vertex_coords(depsgraph, ob_main):
@@ -97,7 +97,15 @@ class SLStudioObjExporter(Operator, ExportHelper):
                 collections = [c for c in ob.users_collection
                                 if re.match(OUTPUT_NAME_REGEXP, c.name or '')]
                 if len(collections) > 0:
+                    # use collection name for output number (e.g. Output.001)
                     ob_name += '_' + collections[0].name
+                elif 'FixtureOutput' in ob and ob['FixtureOutput'] > 0:
+                    # use FixtureOutput object property for output number
+                    ob_name += '_Output.' + format(ob['FixtureOutput'], '03')
+
+                if 'FixtureType' in ob and ob['FixtureType']:
+                    # use FixtureOutput object property for output number
+                    ob_name += '_Type.' + ob['FixtureType']
 
             print(LOG_TAG, 'Writing object "%s"' % ob_name)
             out_strs.append('\no %s\n' % ob_name)
