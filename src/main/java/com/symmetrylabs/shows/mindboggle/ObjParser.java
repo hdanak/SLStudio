@@ -40,12 +40,14 @@ public class ObjParser {
     }
 
     public static class ParsedFixture extends ParsedObject {
+        public final int controller;
         public final int output;
         public final String type;
 
-        public ParsedFixture(String name, int num, int output, String type) {
+        public ParsedFixture(String name, int num, int controller, int output, String type) {
             super(name, num);
 
+            this.controller = controller;
             this.output = output;
             this.type = type;
         }
@@ -147,20 +149,24 @@ public class ObjParser {
                     num = Integer.parseInt(nameParts[0].split("\\.")[1], 10);
                 }
 
-                // object named like Fixture.001_Output.001 or Fixture.001_Output.001_Type.Foo
+                // object named like Fixture.001_Controller.001_Output.001
                 if (parts[1].startsWith("Fixture")) {
                     int output = 0;
+                    int controller = 0;
                     String type = null;
                     for (int i = 1; i < nameParts.length; ++i) {
                         if (nameParts[i].matches("^Output\\.\\d+$")) {
                             output = Integer.parseInt(nameParts[i].split("\\.")[1], 10);
+                        }
+                        else if (nameParts[i].matches("^Controller\\.\\d+$")) {
+                            controller = Integer.parseInt(nameParts[i].split("\\.")[1], 10);
                         }
                         else if (nameParts[i].matches("^Type\\.\\w+$")) {
                             type = nameParts[i].split("\\.")[1];
                         }
                     }
 
-                    ParsedFixture fixture = new ParsedFixture(parts[1], num, output, type);
+                    ParsedFixture fixture = new ParsedFixture(parts[1], num, controller, output, type);
                     curObject = fixture;
                     fixtureByNum.put(num, fixture);
 

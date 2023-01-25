@@ -13,7 +13,7 @@ from bpy.types import Operator
 
 LOG_TAG = '[SLStudioObjExporter]'
 OBJECT_NAME_REGEXP = re.compile(r'^(Fixture|Shape)(_\w+)?\.(\d+)$')
-OUTPUT_NAME_REGEXP = re.compile(r'^(Output)\.(\d+)$')
+OUTPUT_NAME_REGEXP = re.compile(r'^(?:Controller\.(\d+)_)?Output\.(\d+)$')
 
 def extract_vertex_coords(depsgraph, ob_main):
     vcos = []
@@ -27,7 +27,8 @@ def extract_vertex_coords(depsgraph, ob_main):
     for ob, ob_matrix in obs:
         if ob.type == 'EMPTY':
             for child in ob.children:
-                if child.name.startswith(ob.name):
+                #if child.name.startswith(ob.name):
+                if child.type == 'MESH':
                     vcos.extend(extract_vertex_coords(depsgraph, child))
         else:
             # apply modifiers
@@ -101,6 +102,8 @@ class SLStudioObjExporter(Operator, ExportHelper):
                     ob_name += '_' + collections[0].name
                 elif 'FixtureOutput' in ob and ob['FixtureOutput'] > 0:
                     # use FixtureOutput object property for output number
+                    if 'FixtureController' in ob and ob['FixtureController'] > 0:
+                        ob_name += '_Controller.' + format(ob['FixtureController'], '03')
                     ob_name += '_Output.' + format(ob['FixtureOutput'], '03')
 
                 if 'FixtureType' in ob and ob['FixtureType']:

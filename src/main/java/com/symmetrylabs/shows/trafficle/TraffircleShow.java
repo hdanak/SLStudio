@@ -27,10 +27,12 @@ public class TraffircleShow implements Show, HasWorkspace {
     public static final String LOG_TAG = "[TraffircleShow] ";
 
     private static final String OBJ_FILENAME = "model.obj";
+    private static final String OBJ_FIXTURE_TYPE_GROUNDRAY = "GroundRay";
+    private static final String OBJ_FIXTURE_TYPE_GROUNDSTRING = "GroundString";
+    private static final String OBJ_FIXTURE_TYPE_WALLSTRING = "WallString";
 
-    private static final int PIXLITE_OUTPUT_COUNT = 4;
+    private static final int PIXLITE_OUTPUT_COUNT = 16;
     private static final String[] PIXLITE_IPS = {
-        "10.200.1.130",
         "10.200.1.128",
         "10.200.1.129",
     };
@@ -61,19 +63,25 @@ public class TraffircleShow implements Show, HasWorkspace {
 
             List<LXFixture> outputFixtures = null;
             if (f.output > 0) {
-                fixturesPerOutput.putIfAbsent(f.output, new ArrayList<LXFixture>());
-                outputFixtures = fixturesPerOutput.get(f.output);
+                int output = f.output;
+
+                if (f.controller > 0) {
+                    output += (f.controller - 1) * PIXLITE_OUTPUT_COUNT;
+                }
+
+                fixturesPerOutput.putIfAbsent(output, new ArrayList<LXFixture>());
+                outputFixtures = fixturesPerOutput.get(output);
             }
 
             Strip strip = new Strip(null, new Strip.Metrics(fixturePoints.size()), fixturePoints);
 
-            if ("GroundRay".equals(f.type)) {
+            if (OBJ_FIXTURE_TYPE_GROUNDRAY.equals(f.type)) {
                 groundRays.add(strip);
             }
-            else if ("GroundString".equals(f.type)) {
+            else if (OBJ_FIXTURE_TYPE_GROUNDSTRING.equals(f.type)) {
                 groundStrings.add(strip);
             }
-            else if ("WallString".equals(f.type)) {
+            else if (OBJ_FIXTURE_TYPE_WALLSTRING.equals(f.type)) {
                 wallStrings.add(strip);
             }
             else {
