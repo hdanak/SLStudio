@@ -33,14 +33,14 @@ public class TraffircleShow implements Show, HasWorkspace {
 
     private static final int PIXLITE_OUTPUT_COUNT = 16;
     private static final String[] PIXLITE_IPS = {
-        "10.200.1.128",
-        "10.200.1.129",
+        "192.168.1.43",
+        "192.168.1.42",
     };
 
     private Workspace workspace;
 
     // list of fixtures per output, where output starts from 1
-    private Map<Integer, List<LXFixture>> fixturesPerOutput = new HashMap<>();
+    protected static Map<Integer, List<LXFixture>> fixturesPerOutput = new HashMap<>();
 
     @Override
     public TraffircleModel buildModel() {
@@ -68,6 +68,8 @@ public class TraffircleShow implements Show, HasWorkspace {
                 if (f.controller > 0) {
                     output += (f.controller - 1) * PIXLITE_OUTPUT_COUNT;
                 }
+
+                System.out.println("FOOOO " + f.controller + " " + f.output + " " + output);
 
                 fixturesPerOutput.putIfAbsent(output, new ArrayList<LXFixture>());
                 outputFixtures = fixturesPerOutput.get(output);
