@@ -82,6 +82,9 @@ public class TraffircleOutputsPattern extends SLPattern<TraffircleModel> {
             pointParam.setValue(-1);
             pointParam.setRange(-1, pointCount);
         }
+        else if (p == iterateParam) {
+            iterTime = 0;
+        }
     }
 
     private void runForOutput(double deltaMs, int output) {
