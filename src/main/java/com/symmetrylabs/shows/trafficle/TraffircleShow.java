@@ -3,7 +3,7 @@ package com.symmetrylabs.shows.traffircle;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.Collections;
 
 import heronarts.lx.LX;
@@ -39,8 +39,19 @@ public class TraffircleShow implements Show, HasWorkspace {
 
     private Workspace workspace;
 
-    // list of fixtures per output, where output starts from 1
-    protected static Map<Integer, List<LXFixture>> fixturesPerOutput = new HashMap<>();
+    // list of fixtures per output, in order of (controller, output), not minding gaps
+    protected static List<List<LXFixture>> fixturesPerOutput = new ArrayList<>();
+
+    // list of output fixture lists per controller,
+    //   e.g. fixturesList = fixturesByControllerOutput.get(controllerIndex).get(outputIndex)
+    protected static List<Map<Integer, List<LXFixture>>> fixturesByControllerOutput;
+    static {
+        fixturesByControllerOutput = new ArrayList<Map<Integer, List<LXFixture>>>(PIXLITE_IPS.length);
+        for (int i = 0; i < PIXLITE_IPS.length; ++i) {
+            // TreeMap stays sorted by key
+            fixturesByControllerOutput.add(new TreeMap<>());
+        }
+    }
 
     @Override
     public TraffircleModel buildModel() {
@@ -53,7 +64,7 @@ public class TraffircleShow implements Show, HasWorkspace {
         objParser.parse(OBJ_FILENAME);
 
         for (ObjParser.ParsedFixture f : objParser.fixtures) {
-            System.out.println(LOG_TAG + "Adding " + f.verts.size() + " points for fixture " + f.num + " with output " + f.output);
+            System.out.println(LOG_TAG + "Adding " + f.verts.size() + " points for fixture " + f.num + " with controller " + f.controller + " and output " + f.output);
 
             // make all the model points in output order first
             List<LXPoint> fixturePoints = new ArrayList<>();
@@ -62,17 +73,22 @@ public class TraffircleShow implements Show, HasWorkspace {
             }
 
             List<LXFixture> outputFixtures = null;
+            int controllerIdx = -1;
+            int outputIdx = -1;
             if (f.output > 0) {
-                int output = f.output;
-
-                if (f.controller > 0) {
-                    output += (f.controller - 1) * PIXLITE_OUTPUT_COUNT;
+                if (f.controller == 0) {
+                    controllerIdx = (f.output - 1) / PIXLITE_OUTPUT_COUNT;
+                    outputIdx = (f.output - 1) % PIXLITE_OUTPUT_COUNT;
                 }
+                else {
+                    controllerIdx = f.controller - 1;
+                    outputIdx = f.output - 1;
+                }
+            }
 
-                System.out.println("FOOOO " + f.controller + " " + f.output + " " + output);
-
-                fixturesPerOutput.putIfAbsent(output, new ArrayList<LXFixture>());
-                outputFixtures = fixturesPerOutput.get(output);
+            if (controllerIdx >= 0 && controllerIdx < fixturesByControllerOutput.size()) {
+                fixturesByControllerOutput.get(controllerIdx).putIfAbsent(outputIdx, new ArrayList<>());
+                outputFixtures = fixturesByControllerOutput.get(controllerIdx).get(outputIdx);
             }
 
             Strip strip = new Strip(null, new Strip.Metrics(fixturePoints.size()), fixturePoints);
@@ -96,29 +112,33 @@ public class TraffircleShow implements Show, HasWorkspace {
             }
         }
 
+        for (Map<Integer, List<LXFixture>> fixturesByOutput : fixturesByControllerOutput) {
+            for (List<LXFixture> outputFixtures : fixturesByOutput.values()) {
+                fixturesPerOutput.add(outputFixtures);
+            }
+        }
+
         return new TraffircleModel(groundRays, groundStrings, wallStrings);
     }
 
     @Override
     public void setupLx(LX lx) {
-        int baseOutput = 1;
-        for (String ip : PIXLITE_IPS) {
+        for (int controllerIdx = 0; controllerIdx < PIXLITE_IPS.length; ++controllerIdx) {
+            String ip = PIXLITE_IPS[controllerIdx];
             SimplePixlite pixlite = new SimplePixlite(lx, ip);
 
-            for (int i = 0; i < PIXLITE_OUTPUT_COUNT; ++i) {
-                if (fixturesPerOutput.containsKey(baseOutput + i)) {
-                    List<LXFixture> fixtures = fixturesPerOutput.get(baseOutput + i);
-                    List<LXPoint> points = new ArrayList<>();
-                    for (LXFixture fixture : fixtures) {
-                        points.addAll(fixture.getPoints());
-                    }
-                    points.sort((LXPoint p1, LXPoint p2) -> { return p1.index - p2.index; });
-                    pixlite.addPixliteOutput(new PointsGrouping(i+1+"").addPoints(points));
+            System.out.println("controllerIdx=" + controllerIdx);
+            for (int outputIdx : fixturesByControllerOutput.get(controllerIdx).keySet()) {
+                List<LXFixture> fixtures = fixturesByControllerOutput.get(controllerIdx).get(outputIdx);
+                List<LXPoint> points = new ArrayList<>();
+                for (LXFixture fixture : fixtures) {
+                    points.addAll(fixture.getPoints());
                 }
+                points.sort((LXPoint p1, LXPoint p2) -> { return p1.index - p2.index; });
+                pixlite.addPixliteOutput(new PointsGrouping(outputIdx+1+"").addPoints(points));
             }
 
             lx.addOutput(pixlite);
-            baseOutput += PIXLITE_OUTPUT_COUNT;
         }
     }
 

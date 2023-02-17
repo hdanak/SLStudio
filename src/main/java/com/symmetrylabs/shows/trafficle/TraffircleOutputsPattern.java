@@ -42,14 +42,7 @@ public class TraffircleOutputsPattern extends SLPattern<TraffircleModel> {
     public TraffircleOutputsPattern(LX lx) {
         super(lx);
 
-        int maxOutput = 1;
-        for (int output : TraffircleShow.fixturesPerOutput.keySet()) {
-            if (output > maxOutput) {
-                maxOutput = output;
-            }
-        }
-
-        addParameter(outputParam = new DiscreteParameter("output", 1, 0, maxOutput + 1));
+        addParameter(outputParam = new DiscreteParameter("output", 0, 0, TraffircleShow.fixturesPerOutput.size() + 1));
         addParameter(pointParam = new DiscreteParameter("point", -1, -1, 0));
         addParameter(colorParam = new ColorParameter("color", LXColor.RED));
         addParameter(colorModeParam = new EnumParameter<ColorMode>("colorMode", ColorMode.SOLID));
@@ -61,7 +54,7 @@ public class TraffircleOutputsPattern extends SLPattern<TraffircleModel> {
 
     private int getOutputPointCount(int output) {
         int pointCount = 0;
-        List<LXFixture> fixtures = TraffircleShow.fixturesPerOutput.get(output);
+        List<LXFixture> fixtures = TraffircleShow.fixturesPerOutput.get(output - 1);
         if (fixtures != null) {
             for (LXFixture fixture : fixtures) {
                 pointCount += fixture.getPoints().size();
@@ -114,11 +107,11 @@ public class TraffircleOutputsPattern extends SLPattern<TraffircleModel> {
     }
 
     private void runForOutput(double deltaMs, int output) {
-        if (!TraffircleShow.fixturesPerOutput.containsKey(output)) {
+        if (TraffircleShow.fixturesPerOutput.size() < output) {
             return;
         }
         double startHue = colorParam.hue.getValue();
-        List<LXFixture> fixtures = TraffircleShow.fixturesPerOutput.get(output);
+        List<LXFixture> fixtures = TraffircleShow.fixturesPerOutput.get(output - 1);
         if (fixtures != null) {
             int selectedPoint = pointParam.getValuei();
             if (iterateParam.isOn()) {
