@@ -37,6 +37,11 @@ public class TraffircleShow implements Show, HasWorkspace {
         "192.168.1.42",
     };
 
+    private static final int[] PIXLITE_UNIVERSES_PER_OUTPUT = {
+        5,
+        10,
+    };
+
     private Workspace workspace;
 
     // list of fixtures per output, in order of (controller, output), not minding gaps
@@ -125,7 +130,8 @@ public class TraffircleShow implements Show, HasWorkspace {
     public void setupLx(LX lx) {
         for (int controllerIdx = 0; controllerIdx < PIXLITE_IPS.length; ++controllerIdx) {
             String ip = PIXLITE_IPS[controllerIdx];
-            SimplePixlite pixlite = new SimplePixlite(lx, ip);
+            int universesPerOutput = PIXLITE_UNIVERSES_PER_OUTPUT[controllerIdx];
+            SimplePixlite pixlite = new SimplePixlite(lx, ip, universesPerOutput);
 
             System.out.println("controllerIdx=" + controllerIdx);
             for (int outputIdx : fixturesByControllerOutput.get(controllerIdx).keySet()) {

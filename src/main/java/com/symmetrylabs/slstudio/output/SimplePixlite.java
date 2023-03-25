@@ -7,11 +7,18 @@ import heronarts.lx.output.LXDatagramOutput;
 import java.net.SocketException;
 
 public class SimplePixlite extends ArtNetOutput {
-    private LX lx;
+    private final LX lx;
+    private final int universesPerOutput;
 
     public SimplePixlite(LX lx, String ipAddress) {
+        this(lx, ipAddress, 10);
+    }
+
+    public SimplePixlite(LX lx, String ipAddress, int universesPerOutput) {
         super(lx, ipAddress);
+
         this.lx = lx;
+        this.universesPerOutput = universesPerOutput;
     }
 
     public SimplePixlite addPixliteOutput(PointsGrouping pointsGrouping) {
@@ -37,7 +44,7 @@ public class SimplePixlite extends ArtNetOutput {
         public SimplePixliteOutput(PointsGrouping pointsGrouping) throws SocketException {
             super(lx);
             this.outputIndex = Integer.parseInt(pointsGrouping.id);
-            this.firstUniverseOnOutput = outputIndex * 10;
+            this.firstUniverseOnOutput = outputIndex * universesPerOutput;
             setupDatagrams(pointsGrouping);
         }
 
