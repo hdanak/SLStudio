@@ -42,6 +42,7 @@ import com.symmetrylabs.shows.banyan.BanyanShow;
 import com.symmetrylabs.shows.area15.Area15Show;
 import com.symmetrylabs.shows.mindboggle.MindBoggleShow;
 import com.symmetrylabs.shows.church.ChurchShow;
+import com.symmetrylabs.shows.interactive.InteractiveShow;
 import processing.core.PApplet;
 
 public class ShowRegistry {
@@ -113,6 +114,7 @@ public class ShowRegistry {
         map.put(Andy.SHOW_NAME, Andy::new);
         map.put(MindBoggleShow.SHOW_NAME, MindBoggleShow::new);
         map.put(ChurchShow.SHOW_NAME, ChurchShow::new);
+        map.put(InteractiveShow.SHOW_NAME, InteractiveShow::new);
     }
 
     interface ShowBuilder {
