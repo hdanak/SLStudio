@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "timestamp": 1711586422045,
+  "version": 3,
+  "timestamp": 1711602043720,
   "engine": {
     "id": 1,
     "class": "heronarts.lx.LXEngine",
@@ -44,7 +44,7 @@
         "modulationColor": -16769537,
         "parameters": {
           "label": "Look-1",
-          "focusedChannel": 0
+          "focusedChannel": 1
         },
         "channels": [
           {
@@ -76,7 +76,7 @@
             "patternIndex": 0,
             "patterns": [
               {
-                "id": 51,
+                "id": 55,
                 "class": "com.symmetrylabs.slstudio.pattern.Sparkle",
                 "modulationColor": -65457,
                 "parameters": {
@@ -98,12 +98,62 @@
                 "autoCycleEnabled": true
               }
             ]
+          },
+          {
+            "id": 57,
+            "class": "heronarts.lx.LXChannel",
+            "modulationColor": -24064,
+            "parameters": {
+              "label": "Channel-2",
+              "enabled": true,
+              "cue": false,
+              "midiMonitor": false,
+              "midiChannel": 16,
+              "autoCycleEnabled": false,
+              "autoCycleTimeSecs": 60.0,
+              "fader": 0.5421686768531799,
+              "crossfadeGroup": 0,
+              "blendMode": 0,
+              "transitionEnabled": false,
+              "transitionTimeSecs": 5.0,
+              "transitionBlendMode": 0,
+              "autoDisable": true,
+              "speed": 1.0,
+              "editorVisible": true,
+              "patternBlendMode": 0,
+              "blendPatterns": false
+            },
+            "warps": [],
+            "effects": [],
+            "patternIndex": 0,
+            "patterns": [
+              {
+                "id": 58,
+                "class": "heronarts.lx.pattern.SolidColorPattern",
+                "modulationColor": -16768257,
+                "parameters": {
+                  "label": "SolidColor",
+                  "expandedInUi": true,
+                  "Enabled": true,
+                  "color/hue": 0.0,
+                  "color/brightness": 100.0,
+                  "color/saturation": 100.0,
+                  "color": -65536
+                },
+                "modulation": {
+                  "modulators": [],
+                  "modulations": [],
+                  "triggers": []
+                },
+                "autoCycleEnabled": true
+              }
+            ]
           }
         ],
         "shelf": {
           "id": 33,
           "class": "heronarts.lx.modulator.APC40Mk2Shelf",
-          "modulationColor": -65327,
+          "modulationColor": -21760,
           "parameters": {
             "label": "APC40Mk2 Shelf",
             "running": false,
@@ -230,7 +280,7 @@
     },
     "components": {
       "GammaExpander": {
-        "id": 39,
+        "id": 37,
         "class": "com.symmetrylabs.slstudio.component.GammaExpander",
         "modulationColor": -65380,
         "parameters": {
@@ -240,88 +290,6 @@
           "RGMA": 2.0,
           "GGMA": 2.2,
           "BGMA": 2.8
-        }
-      },
-      "DMXParameterMapper": {
-        "id": 49,
-        "class": "com.symmetrylabs.util.dmx.DMXParameterMapper",
-        "modulationColor": -6488320,
-        "parameters": {
-          "label": "DMXParameterMapper"
-        },
-        "mappings": []
-      },
-      "envelop": {
-        "id": 34,
-        "class": "com.symmetrylabs.slstudio.envelop.Envelop",
-        "modulationColor": -2816,
-        "parameters": {
-          "label": "Envelop",
-          "running": true,
-          "trigger": false
-        },
-        "source": {
-          "id": 35,
-          "class": "com.symmetrylabs.slstudio.envelop.Envelop$Source",
-          "modulationColor": -65481,
-          "parameters": {
-            "label": "Source",
-            "running": true,
-            "trigger": false,
-            "Gain": 0.0,
-            "Range": 24.0,
-            "Attack": 25.0,
-            "Release": 50.0,
-            "Source-1": 0.0,
-            "Source-2": 0.0,
-            "Source-3": 0.0,
-            "Source-4": 0.0,
-            "Source-5": 0.0,
-            "Source-6": 0.0,
-            "Source-7": 0.0,
-            "Source-8": 0.0,
-            "Source-9": 0.0,
-            "Source-10": 0.0,
-            "Source-11": 0.0,
-            "Source-12": 0.0,
-            "Source-13": 0.0,
-            "Source-14": 0.0,
-            "Source-15": 0.0,
-            "Source-16": 0.0
-          }
-        },
-        "decode": {
-          "id": 36,
-          "class": "com.symmetrylabs.slstudio.envelop.Envelop$Decode",
-          "modulationColor": -851713,
-          "parameters": {
-            "label": "Decode",
-            "running": true,
-            "trigger": false,
-            "Gain": 0.0,
-            "Range": 24.0,
-            "Attack": 25.0,
-            "Release": 50.0,
-            "Decode-1": 0.0,
-            "Decode-2": 0.0,
-            "Decode-3": 0.0,
-            "Decode-4": 0.0,
-            "Decode-5": 0.0,
-            "Decode-6": 0.0,
-            "Decode-7": 0.0,
-            "Decode-8": 0.0
-          }
-        }
-      },
-      "outputControl": {
-        "id": 45,
-        "class": "com.symmetrylabs.slstudio.output.OutputControl",
-        "modulationColor": -65526,
-        "parameters": {
-          "label": "Output Control",
-          "Broadcast packet enabled": false,
-          "test unicast": false,
-          "broadcast (10.255.255.255)": false
         }
       },
       "swatches": {
@@ -420,19 +388,51 @@
     "channelPresets": {
       "presets": {}
     },
-    "ui": {
-      "audioExpanded": true,
-      "paletteExpanded": true,
-      "engineExpanded": true,
-      "clipViewVisible": true,
-      "modulatorExpanded": {},
-      "preview": {
-        "radius": 300.0,
-        "theta": 0.0,
-        "phi": 0.0,
-        "positionX": 0.0,
-        "positionY": 41.74234390258789,
-        "positionZ": -112.78345489501953
+    "volumeWindowManager": {
+      "Audio": {
+        "visible": false
+      },
+      "Automation": {
+        "visible": false
+      },
+      "Color swatches": {
+        "visible": false
+      },
+      "Console": {
+        "visible": false
+      },
+      "Cue": {
+        "visible": true
+      },
+      "Developer/About imgui": {
+        "visible": false
+      },
+      "Developer/Imgui demo": {
+        "visible": false
+      },
+      "Developer/Imgui metrics": {
+        "visible": false
+      },
+      "Developer/Style editor": {
+        "visible": false
+      },
+      "Internals": {
+        "visible": false
+      },
+      "Master": {
+        "visible": true
+      },
+      "Modulation": {
+        "visible": false
+      },
+      "OSC": {
+        "visible": false
+      },
+      "Remote Control": {
+        "visible": false
+      },
+      "Tap Tempo": {
+        "visible": false
       }
     }
   }
