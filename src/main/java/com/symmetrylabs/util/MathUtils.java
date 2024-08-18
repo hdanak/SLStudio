@@ -95,6 +95,20 @@ public final class MathUtils {
         return sqrt(dx * dx + dy * dy);
     }
 
+    public static float dist(float[] a, float[] b) {
+        float dx = b[0] - a[0];
+        float dy = b[1] - a[1];
+        float dz = b[2] - a[2];
+        return sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    public static float dot(float x1, float y1, float z1, float x2, float y2, float z2) {
+        return x1 * x2 + y1 * y2 + z1 * z2;
+    }
+    public static float dot(float[] a, float[] b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    }
+
     public static final float map(float value, float start1, float stop1, float start2, float stop2) {
         float outgoing = start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
         return outgoing;

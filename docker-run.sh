@@ -5,6 +5,7 @@ XAUTH=/tmp/.docker.xauth
 xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
 mkdir -p docker-gradle
 docker run --rm -ti \
+    --network=host \
 	--user "$(id -u):$(id -g)" \
     --device /dev/snd \
     --device /dev/dri/card0 \
