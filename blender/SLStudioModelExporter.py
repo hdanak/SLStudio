@@ -121,7 +121,7 @@ class SLStudioModelExporter(bpy.types.Operator, ExportHelper):
 
         return super().invoke(context, _event)
 
-    def json_gen(self, context):
+    def model_gen(self, context):
         # based on Blender's export_obj addon
 
         depsgraph = context.evaluated_depsgraph_get()
@@ -129,7 +129,7 @@ class SLStudioModelExporter(bpy.types.Operator, ExportHelper):
         objects = scene.objects
 
         out = {
-            'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %z"),
+            'date': datetime.datetime.now().isoformat(),
             'notes': "Exported from Blender using SLStudioModelExporter script",
             'fixtures': [],
             'controllers': [],
@@ -183,7 +183,7 @@ class SLStudioModelExporter(bpy.types.Operator, ExportHelper):
 
             detect_folds = False
             if PROP_FIXTURE_DETECT_FOLDS in ob and ob[PROP_FIXTURE_DETECT_FOLDS]:
-                detect_folds = ob[PROP_FIXTURE_DETECT_FOLDS].upper()
+                detect_folds = bool(ob[PROP_FIXTURE_DETECT_FOLDS])
 
             fixture_verts = extract_vertex_coords(depsgraph, ob)
             shape_verts = None
@@ -254,8 +254,9 @@ class SLStudioModelExporter(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         print(LOG_TAG, 'Exporting SLStudio model to file "%s"' % self.filepath)
+        model_json = json.dumps(self.model_gen(context), indent=2)
         f = open(self.filepath, 'w', encoding='utf-8')
-        f.write(json.dumps(self.json_gen(context), indent=2))
+        f.write(model_json)
         f.close()
         print(LOG_TAG, 'Finished')
 
@@ -483,7 +484,7 @@ class SLStudioFixturePropertiesPanel(bpy.types.Panel):
             row = layout.row(heading=object.name)
             row.prop(object, '["'+PROP_FIXTURE_TYPE+'"]', text='Type')
             row.prop(object, '["'+PROP_FIXTURE_COLOR_TYPE+'"]', text='ColorType')
-            row.prop(object, '["'+PROP_FIXTURE_REVERSE+'"]', text='Flip?')
+            row.prop(object, '["'+PROP_FIXTURE_REVERSE+'"]', text='Reverse?')
             row.prop(object, '["'+PROP_FIXTURE_DETECT_FOLDS+'"]', text='Detect Folds?')
             col = row.column()
             props = col.operator(SelectObjectByNameOperator.bl_idname, text=('Deselect' if object.select_get() else 'Select'))
