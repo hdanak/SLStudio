@@ -16,8 +16,9 @@ import static com.symmetrylabs.util.MathUtils.dot;
 public class BlenderPluginModelConfig {
     public static final String LOG_TAG = "[BlenderPluginModelConfig] ";
 
-    private static final double CURVE_OVERLAP_DIST_THRESH = 0.003;
-    private static final double MIN_OVERLAP_LENGTH_THRESH = 0.1;
+    // 3.28084 ?
+    private static final double CURVE_OVERLAP_DIST_THRESH = 0.003 * 3;
+    private static final double MIN_OVERLAP_LENGTH_THRESH = 0.1 * 3;
 
     public static class ModelJson {
         public String date;
@@ -33,7 +34,7 @@ public class BlenderPluginModelConfig {
         public Integer controllerIdx;
         public Integer outputIdx;
         public float[][] verts;
-        public float[][] shape;
+        public float[][] shapeVerts;
         public boolean detectFolds;
     }
     public static class ConfigController {
@@ -114,9 +115,7 @@ public class BlenderPluginModelConfig {
                 fixturesByControllerOutput.get(cf.controllerIdx).get(cf.outputIdx).add(cf);
             }
 
-            if (cf.shape != null) {
-                calcFixtureShapeMappings(cf);
-            }
+            calcFixtureShapeMappings(cf);
         }
 
         for (ConfigController cc : json.controllers) {
@@ -136,8 +135,13 @@ public class BlenderPluginModelConfig {
         return new BlenderPluginModelConfig(json);
     }
 
-    private void calcFixtureShapeMappings(ConfigFixture fixture) {
-        float[][] shapeVerts = fixture.shape;
+    private void calcFixtureShapeMappings(ConfigFixture cf) {
+        float[][] shapeVerts = cf.shapeVerts;
+        if (shapeVerts == null) {
+            shapeSectionsByFixtureIdx.put(cf.idx, new ArrayList<ShapeSection>());
+            vertIdxToShapeSegByFixtureIdx.put(cf.idx, new int[0]);
+            return;
+        }
 
         // precalculate segment lengths and vector subtractions
         float[] segLengths = new float[shapeVerts.length - 1];
@@ -154,12 +158,12 @@ public class BlenderPluginModelConfig {
             segDeltaZs[svi] = sv2[2] - sv1[2];
         }
 
-        int[] fixtureVertIdxToShapeSeg = new int[fixture.verts.length];
+        int[] fixtureVertIdxToShapeSeg = new int[cf.verts.length];
 
         // find closest shape segment to fixture vert
         int lastShapeVertIndex = 0;
-        for (int fvi = 0; fvi < fixture.verts.length; ++fvi) {
-            float[] fv = fixture.verts[fvi];
+        for (int fvi = 0; fvi < cf.verts.length; ++fvi) {
+            float[] fv = cf.verts[fvi];
 
             int closestSegIndex = -1;
             float closestSegDist = Float.MAX_VALUE;
@@ -207,12 +211,12 @@ public class BlenderPluginModelConfig {
 
 
             if (closestSegIndex != -1) {
-                //System.out.println(LOG_TAG + "Closest segment index for fixture point " + fvi + " in fixture " + (fixture.idx + 1) + " is " + closestSegIndex + " at dist " + closestSegDist);
+                //System.out.println(LOG_TAG + "Closest segment index for fixture point " + fvi + " in fixture " + (cf.idx + 1) + " is " + closestSegIndex + " at dist " + closestSegDist);
                 //lastShapeVertIndex = closestSegIndex;
                 fixtureVertIdxToShapeSeg[fvi] = closestSegIndex;
             }
             else {
-                System.err.println(LOG_TAG + "Could not find shape segment for point " + fvi + " in fixture " + (fixture.idx + 1));
+                System.err.println(LOG_TAG + "Could not find shape segment for point " + fvi + " in fixture " + (cf.idx + 1));
                 fixtureVertIdxToShapeSeg[fvi] = -1;
             }
 
@@ -294,11 +298,11 @@ public class BlenderPluginModelConfig {
             }
 
             if (!overlapMode && overlapFound) {
-                //System.out.println(LOG_TAG + "Shape " + (fixture.idx + 1) + " Overlap start: " + svi + " (" + vertQueue.get(lastOverlapIndex) + ", " + (vertQueue.get(lastOverlapIndex) + 1) + ")");
+                //System.out.println(LOG_TAG + "Shape " + (cf.idx + 1) + " Overlap start: " + svi + " (" + vertQueue.get(lastOverlapIndex) + ", " + (vertQueue.get(lastOverlapIndex) + 1) + ")");
                 overlapMode = true;
             }
             else if (overlapMode && !overlapFound) {
-                //System.out.println(LOG_TAG + "Shape " + (fixture.idx + 1) + " Overlap end: " + svi + " (" + vertQueue.get(lastOverlapIndex) + ", " + (vertQueue.get(lastOverlapIndex) + 1) + ")");
+                //System.out.println(LOG_TAG + "Shape " + (cf.idx + 1) + " Overlap end: " + svi + " (" + vertQueue.get(lastOverlapIndex) + ", " + (vertQueue.get(lastOverlapIndex) + 1) + ")");
 
                 // check if overlapping section is long enough to qualify
                 double overlapLength = calcShapeSectionLength(shapeVerts, vertQueue.get(lastOverlapIndex), vertQueue.get(vertQueue.size() - 1));
@@ -319,7 +323,7 @@ public class BlenderPluginModelConfig {
                     vertQueue.clear();
                 }
                 else {
-                    System.out.println("Did not meet overlap length threshold, shape " + (fixture.idx + 1) + ": " + vertQueue.get(lastOverlapIndex) + " " + vertQueue.get(vertQueue.size() - 1));
+                    System.out.println("Did not meet overlap length threshold, shape " + (cf.idx + 1) + ": " + vertQueue.get(lastOverlapIndex) + " " + vertQueue.get(vertQueue.size() - 1));
                 }
 
                 overlapMode = false;
@@ -361,8 +365,8 @@ public class BlenderPluginModelConfig {
             }
         }
 
-        shapeSectionsByFixtureIdx.put(fixture.idx, shapeSections);
-        vertIdxToShapeSegByFixtureIdx.put(fixture.idx, fixtureVertIdxToShapeSeg);
+        shapeSectionsByFixtureIdx.put(cf.idx, shapeSections);
+        vertIdxToShapeSegByFixtureIdx.put(cf.idx, fixtureVertIdxToShapeSeg);
     }
 
     private double calcShapeSectionLength(float[][] shapeVerts, int i0, int i1) {

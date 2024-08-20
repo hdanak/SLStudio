@@ -15,12 +15,16 @@ public class NeuronMaskEffect extends SLEffect<MindBoggleModel> {
 
     public final EnumParameter<MaskMode> dendriteMaskParam = new EnumParameter<>("DendriteMask", MaskMode.PASS);
     public final EnumParameter<MaskMode> axonMaskParam = new EnumParameter<>("AxonMask", MaskMode.PASS);
+    public final EnumParameter<MaskMode> rootMaskParam = new EnumParameter<>("RootMask", MaskMode.PASS);
+    public final EnumParameter<MaskMode> perimMaskParam = new EnumParameter<>("PerimMask", MaskMode.PASS);
 
     public NeuronMaskEffect(LX lx) {
         super(lx);
 
         addParameter(dendriteMaskParam);
         addParameter(axonMaskParam);
+        addParameter(rootMaskParam);
+        addParameter(perimMaskParam);
     }
 
     @Override
@@ -45,6 +49,28 @@ public class NeuronMaskEffect extends SLEffect<MindBoggleModel> {
                 for (MindBoggleModel.AxonSegment fixture : neuron.getAxonSegments()) {
                     setColor(fixture, c);
                 }
+            }
+        }
+
+        for (MindBoggleModel.Root root : model.getRoots()) {
+            if (rootMaskParam.getEnum() != MaskMode.PASS) {
+                int c = LXColor.BLACK;
+                if (rootMaskParam.getEnum() == MaskMode.ON) {
+                    c = LXColor.WHITE;
+                }
+
+                setColor(root, c);
+            }
+        }
+
+        for (MindBoggleModel.Perim perim : model.getPerims()) {
+            if (perimMaskParam.getEnum() != MaskMode.PASS) {
+                int c = LXColor.BLACK;
+                if (perimMaskParam.getEnum() == MaskMode.ON) {
+                    c = LXColor.WHITE;
+                }
+
+                setColor(perim, c);
             }
         }
     }

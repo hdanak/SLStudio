@@ -319,6 +319,28 @@ class SLStudioSelectAllFixturesOperator(bpy.types.Operator):
                     child.select_set(state=state)
         return {'FINISHED'}
 
+## Scaling an existing metric project to inches:
+# - select all, scale by 39.37008, apply scale (space menu), then run:
+#     bpy.ops.object.mode_set(mode='OBJECT')
+#     for o in bpy.data.objects:
+#         if o.name.startswith('Fixture') and o.type == 'MESH':
+#             o.modifiers['Array'].constant_offset_displace[0] *= 39.37008
+#             o.data.vertices[0].co = (0, 0, 0)
+
+## Fixing meshes that are rotated or have a non-zero Y or Z origin
+#     bpy.ops.object.mode_set(mode='OBJECT')
+#     for o in bpy.data.objects:
+#         if o.name.startswith('Fixture') and o.type == 'EMPTY':
+#             for c in o.children:
+#                 if c.type == 'MESH':
+#                     x_offset = c.matrix_local[0][3]
+#                     c.matrix_parent_inverse.identity()
+#                     c.matrix_local.identity()
+#                     c.matrix_local[0][3] = x_offset
+#                 if c.type == 'CURVE':
+#                     c.matrix_parent_inverse.identity()
+#                     c.matrix_local.identity()
+
 class SLStudioSetupSceneOperator(bpy.types.Operator):
     """SLStudio Setup Scene Operator"""
     bl_idname = "object.slstudio_setup_collections"
@@ -330,7 +352,7 @@ class SLStudioSetupSceneOperator(bpy.types.Operator):
         bpy.context.scene.unit_settings.system = 'IMPERIAL'
         bpy.context.scene.unit_settings.length_unit = 'INCHES'
         bpy.context.scene.unit_settings.scale_length = 0.0254  # 1 inch = 0.0254 meters
-        bpy.context.scene.unit_settings.use_separate = True
+        bpy.context.scene.unit_settings.use_separate = False
 
         # setup default collections
         for collection_name in [SCENERY_COLLECTION, TEMPLATE_COLLECTION, FIXTURES_COLLECTION]:

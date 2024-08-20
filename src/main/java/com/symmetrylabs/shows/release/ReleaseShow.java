@@ -29,7 +29,7 @@ public class ReleaseShow extends WorkspaceShow {
     // last one repeats for all remaining Pixlites
     private static final int[] PIXLITE_UNIVERSES_PER_OUTPUT = { 5 };
 
-    private static final String OUTPUT_TYPE_PIXELS = "PIXELS";
+    private static final String OUTPUT_TYPE_GENERIC = "GENERIC";
     private static final String OUTPUT_TYPE_DMX = "DMX";
 
     private BlenderPluginModelConfig modelConfig = null;
@@ -99,6 +99,7 @@ public class ReleaseShow extends WorkspaceShow {
                         default:
                             ArtNetCustomDmxDatagram.Builder builder = new ArtNetCustomDmxDatagram.Builder();
 
+                            // detect contiguous LEDs with the same color type
                             String lastColorType = null;
                             int start = 0;
                             int count = 0;
