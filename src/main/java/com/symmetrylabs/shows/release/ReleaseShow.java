@@ -26,7 +26,7 @@ public class ReleaseShow extends WorkspaceShow {
     private static final String[] PIXLITE_IPS = {
         "192.168.1.43",
     };
-    private static final int[] PIXLITE_UNIVERSES_PER_OUTPUT = { 6 };
+    private static final int[] PIXLITE_UNIVERSES_PER_OUTPUT = { 10 };
 
     private static final String FIXTURE_COLOR_TYPE_RGB = "RGB";
     private static final String FIXTURE_COLOR_TYPE_RGBWYP = "RGBWYP";
@@ -88,7 +88,7 @@ public class ReleaseShow extends WorkspaceShow {
                 final BlenderPluginModelConfig.ConfigOutput outputConfig
                     = modelConfig.controllerOutputConfigs.get(controllerIdx).get(outputIdx);
 
-                pixlite.addPoints(outputIdx * universesPerOutput, points,
+                pixlite.addPoints((outputIdx + 1) * universesPerOutput, points,
                     (int[] pointIndices, Integer universeIndex) -> {
                         String outputType = "GENERIC";
                         if (outputConfig != null) {
