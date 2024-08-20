@@ -10,7 +10,7 @@ import heronarts.lx.LX;
 import heronarts.lx.model.LXPoint;
 
 import com.symmetrylabs.shows.WorkspaceShow;
-import com.symmetrylabs.slstudio.model.Strip;
+import com.symmetrylabs.slstudio.component.GammaExpander;
 import com.symmetrylabs.slstudio.output.ManualPixlite;
 import com.symmetrylabs.slstudio.output.ArtNetCustomDmxDatagram;
 import com.symmetrylabs.slstudio.blenderplugin.BlenderPluginModel;
@@ -26,11 +26,9 @@ public class ReleaseShow extends WorkspaceShow {
     private static final String[] PIXLITE_IPS = {
         "192.168.1.43",
     };
+    // last one repeats for all remaining Pixlites
     private static final int[] PIXLITE_UNIVERSES_PER_OUTPUT = { 5 };
 
-    private static final String FIXTURE_COLOR_TYPE_RGB = "RGB";
-    private static final String FIXTURE_COLOR_TYPE_RGBWYP = "RGBWYP";
-    private static final String FIXTURE_COLOR_TYPE_RGBW = "RGBW";
     private static final String OUTPUT_TYPE_PIXELS = "PIXELS";
     private static final String OUTPUT_TYPE_DMX = "DMX";
 
@@ -51,6 +49,8 @@ public class ReleaseShow extends WorkspaceShow {
 
     @Override
     public void setupLx(LX lx) {
+        GammaExpander.getInstance(lx).enabled.setValue(false);
+
         pixlites.clear();
 
         for (int controllerIdx = 0; controllerIdx < model.fixturesByControllerOutput.size(); ++controllerIdx) {
@@ -73,7 +73,6 @@ public class ReleaseShow extends WorkspaceShow {
                     fixtureByPointIndex[p.index] = fixture;
                 }
             }
-
 
             Map<Integer, List<BlenderPluginModel.Fixture>> fixturesByOutput
                     = model.fixturesByControllerOutput.get(controllerIdx);
