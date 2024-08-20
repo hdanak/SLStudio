@@ -26,7 +26,7 @@ public class ReleaseShow extends WorkspaceShow {
     private static final String[] PIXLITE_IPS = {
         "192.168.1.43",
     };
-    private static final int[] PIXLITE_UNIVERSES_PER_OUTPUT = { 10 };
+    private static final int[] PIXLITE_UNIVERSES_PER_OUTPUT = { 5 };
 
     private static final String FIXTURE_COLOR_TYPE_RGB = "RGB";
     private static final String FIXTURE_COLOR_TYPE_RGBWYP = "RGBWYP";
